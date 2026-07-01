@@ -430,19 +430,6 @@
           <div class="swatch" data-theme="cyan" style="background:#12B5C9" onclick="pickTheme(this,'cyan')"></div>
         </div>
       </div>
-      <div>
-        <div class="opt-label">Wybierz użytkownika</div>
-        <div class="users">
-          <div class="user sel" data-user="kasia" onclick="pickUser(this,'kasia')">
-            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="5"/><line x1="12" y1="13" x2="12" y2="22"/><line x1="8.5" y1="18.5" x2="15.5" y2="18.5"/></svg></span>
-            <span class="nm">Kasia</span>
-          </div>
-          <div class="user" data-user="michal" onclick="pickUser(this,'michal')">
-            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="10" cy="14" r="5"/><line x1="13.5" y1="10.5" x2="20" y2="4"/><polyline points="15,4 20,4 20,9"/></svg></span>
-            <span class="nm">Michał</span>
-          </div>
-        </div>
-      </div>
     </div>
     <button class="save-opt" onclick="saveOptions()">Save</button>
     <button class="logout-opt" onclick="doLogout()">Wyloguj</button>
@@ -508,11 +495,8 @@ function pickUser(el,name){
   el.classList.add('sel'); state.pendingUser=name;
 }
 function saveOptions(){
-  state.theme=state.pendingTheme; state.user=state.pendingUser;
+  state.theme=state.pendingTheme;               // user identity comes from login, not editable here
   applyTheme(state.theme); saveSettings();
-  var who = state.user==='kasia' ? 'Kasia' : 'Michał';
-  document.getElementById('startLabel').textContent = "Let's start "+who+"!";
-  updateUserBadge();
   document.getElementById('options').classList.remove('open');
 }
 function updateUserBadge(){
@@ -928,6 +912,11 @@ var firebaseConfig = {
   messagingSenderId: "175004817999",
   appId: "1:175004817999:web:d0aad95e16f4153e64283a"
 };
+/* login e-mail -> which person you are (lowercase) */
+var EMAIL_USER = {
+  'mgm.kowalski@gmail.com': 'michal',
+  'kledzion93@gmail.com':   'kasia'
+};
 var db=null, auth=null, docRef=null, unsub=null;
 function sig(arr){   // stable signature (ignores object key order) to detect real changes
   return JSON.stringify((arr||[]).map(function(a){
@@ -954,6 +943,12 @@ function showLogin(msg){
 function onLoggedIn(){
   var l=document.getElementById('login'); if(l) l.classList.remove('active');
   var e=document.getElementById('logErr'); if(e) e.textContent='';
+  // identity comes from the login e-mail
+  var em=((auth.currentUser && auth.currentUser.email) || '').toLowerCase();
+  if(EMAIL_USER[em]){ state.user=EMAIL_USER[em]; state.pendingUser=state.user; }
+  var who = state.user==='kasia' ? 'Kasia' : 'Michał';
+  var sl=document.getElementById('startLabel'); if(sl) sl.textContent="Let's start "+who+"!";
+  updateUserBadge();
   if(unsub) return;
   unsub=docRef.onSnapshot(function(snap){
     if(!snap.exists){ docRef.set({activities: seed()}).catch(function(){}); return; }
