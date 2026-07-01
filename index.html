@@ -1085,14 +1085,11 @@ function flyToStart(){
   startBubbles();
   start.classList.add('active');
   start.style.transition='none';
-  start.style.transform='scale(.9)';
-  start.style.opacity='0';
-  list.style.transition='transform .5s cubic-bezier(.3,0,.2,1)';
-  list.style.transform='translateY(105%)';               // list flies down & away
+  start.style.transform='translateY(-100%)';             // start waits just above the screen
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
-    start.style.transition='transform .62s cubic-bezier(.34,1.56,.64,1), opacity .3s ease'; // overshoot = elastic
-    start.style.transform='none';
-    start.style.opacity='1';
+    var e='transform .6s cubic-bezier(.34,1.4,.6,1)';
+    start.style.transition=e; start.style.transform='none';            // start slides down into view (as one)
+    list.style.transition=e;  list.style.transform='translateY(100%)'; // list slides down out
   });});
   setTimeout(function(){
     list.classList.remove('active');
@@ -1108,13 +1105,11 @@ function flyToList(){
   render();
   list.classList.add('active');
   list.style.transition='none';
-  list.style.transform='translateY(105%)';               // list comes up from the bottom
-  start.style.transition='opacity .55s ease, transform .55s ease';  // start fades out slowly
-  start.style.transform='translateY(-30px)';
-  start.style.opacity='0';
+  list.style.transform='translateY(100%)';               // list waits below the screen
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
-    list.style.transition='transform .62s cubic-bezier(.34,1.56,.64,1)';  // overshoot = elastic
-    list.style.transform='none';
+    var e='transform .6s cubic-bezier(.34,1.4,.6,1)';
+    start.style.transition=e; start.style.transform='translateY(-100%)'; // whole start (title, sub, button, gear) slides up
+    list.style.transition=e;  list.style.transform='none';              // list slides up into place
   });});
   setTimeout(function(){
     start.classList.remove('active');
