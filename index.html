@@ -50,7 +50,7 @@
   .app{
     position:relative;width:100%;max-width:480px;height:100%;margin:0 auto;overflow:hidden;
   }
-  .screen{position:absolute;inset:0;display:none;flex-direction:column;}
+  .screen{position:absolute;inset:0;display:none;flex-direction:column;z-index:1;}
   .screen.active{display:flex;}
 
   /* glass primitive */
@@ -206,16 +206,16 @@
   .desc-actions{display:flex;justify-content:space-between;align-items:center;margin-top:22px;}
   .act-btns{display:flex;gap:10px;}
   .btn-edit{
-    border:none;cursor:pointer;color:var(--ink);font-family:inherit;font-size:16px;font-weight:600;
-    padding:11px 28px;border-radius:11px;background:var(--btn);
+    border:none;cursor:pointer;color:var(--ink);font-family:inherit;font-size:14px;font-weight:600;
+    padding:9px 18px;border-radius:10px;background:var(--btn);
   }
   .btn-edit:active{transform:scale(.97);}
-  .box-ghost{min-width:84px;height:44px;border-radius:11px;background:var(--btn);border:none;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;gap:5px;padding:0 16px;color:var(--ink);line-height:1;
+  .box-ghost{min-width:70px;height:38px;border-radius:10px;background:var(--btn);border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:4px;padding:0 12px;color:var(--ink);line-height:1;
     transition:background .15s, transform .15s;}
   .box-ghost:active{transform:scale(.96);background:var(--btn-strong);}
-  .box-ghost .lbl{font-size:11px;font-weight:500;color:var(--muted);}
-  .box-ghost .num{font-size:18px;font-weight:700;}
+  .box-ghost .lbl{font-size:10px;font-weight:500;color:var(--muted);}
+  .box-ghost .num{font-size:15px;font-weight:700;}
 
   /* comments (inside description) */
   .cmt-label{font-size:12px;font-weight:500;color:var(--muted);margin:20px 0 10px;}
@@ -340,6 +340,7 @@
   </defs>
 </svg>
 <div class="app">
+  <div id="bubbles"></div>
 
   <!-- ===================== LOGIN SCREEN ===================== -->
   <section id="login" class="login-screen active">
@@ -358,8 +359,6 @@
 
   <!-- ===================== START SCREEN ===================== -->
   <section id="start" class="screen active">
-    <div id="bubbles"></div>
-
     <button class="settings-btn" onclick="toggleOptions()" aria-label="Opcje">
       <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round">
         <line x1="4" y1="7"  x2="20" y2="7"  stroke="rgba(38,43,58,.6)" stroke-width="2"/>
@@ -378,7 +377,7 @@
     </div>
 
     <div class="start-btn-wrap">
-      <button class="start-btn" onclick="go('list')"><span id="startLabel">Let's start Kasia!</span></button>
+      <button class="start-btn" onclick="flyToList()"><span id="startLabel">Let's start Kasia!</span></button>
     </div>
   </section>
 
@@ -1110,6 +1109,9 @@ function flyToList(){
   list.classList.add('active');
   list.style.transition='none';
   list.style.transform='translateY(105%)';               // list comes up from the bottom
+  start.style.transition='opacity .55s ease, transform .55s ease';  // start fades out slowly
+  start.style.transform='translateY(-30px)';
+  start.style.opacity='0';
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     list.style.transition='transform .62s cubic-bezier(.34,1.56,.64,1)';  // overshoot = elastic
     list.style.transform='none';
