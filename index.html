@@ -43,7 +43,6 @@
       radial-gradient(125% 85% at 12% -12%, rgba(var(--glow-rgb),.22), transparent 55%),
       radial-gradient(120% 90% at 105% 112%, rgba(var(--glow-rgb),.16), transparent 55%),
       linear-gradient(160deg,#fbfbfd 0%,#eceef3 100%);
-    background-attachment:fixed;
     -webkit-text-size-adjust:100%;
     transition:background .6s ease;
   }
@@ -56,14 +55,14 @@
   /* glass primitive */
   .glass{
     background:var(--glass);
-    backdrop-filter:blur(16px) saturate(140%);
-    -webkit-backdrop-filter:blur(16px) saturate(140%);
+    backdrop-filter:blur(12px) saturate(135%);
+    -webkit-backdrop-filter:blur(12px) saturate(135%);
     border:1px solid var(--glass-line);
     box-shadow:inset 0 1px 1px rgba(255,255,255,.75), 0 10px 28px rgba(40,44,70,.10);
   }
 
   /* ================= START SCREEN ================= */
-  #bubbles{position:absolute;inset:0;z-index:0;pointer-events:none;}
+  #bubbles{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:1;transition:opacity .8s ease;}
   .bubble{
     position:absolute;border-radius:50%;
     background:radial-gradient(circle at 34% 30%, rgba(255,255,255,.75), rgba(var(--glow-rgb),.30) 55%, rgba(var(--glow-rgb),.16) 100%);
@@ -90,8 +89,8 @@
     font-family:inherit;font-size:18px;font-weight:600;
     padding:24px 0;border-radius:28px;
     background:var(--glass);
-    backdrop-filter:blur(16px) saturate(140%);
-    -webkit-backdrop-filter:blur(16px) saturate(140%);
+    backdrop-filter:blur(12px) saturate(135%);
+    -webkit-backdrop-filter:blur(12px) saturate(135%);
     border:1px solid var(--glass-line);
     box-shadow:inset 0 1px 1px rgba(255,255,255,.75), 0 10px 28px rgba(40,44,70,.14);
     transition:transform .12s;
@@ -893,8 +892,9 @@ function setupGyro(){
     window.addEventListener('deviceorientation', onOrient);   // Android
   }
 }
+var bubblesRunning=false;
 function startBubbles(){
-  if(bubbleState) return; // already running
+  if(bubbleState){ resumeBubbles(); return; }   // already built -> just ensure it's running
   var host=document.getElementById('bubbles');
   var W=host.clientWidth||390, H=host.clientHeight||844;
   var defs=[58,72,46,90,64,80,52];
@@ -912,10 +912,16 @@ function startBubbles(){
     });
   });
   bubbleState={balls:balls, W:W, H:H, host:host};
+  bubblesRunning=true;
   requestAnimationFrame(stepBubbles);
 }
+var bubbleHideTimer=null;
+function resumeBubbles(){ if(bubbleState && !bubblesRunning){ bubblesRunning=true; requestAnimationFrame(stepBubbles); } }
+function pauseBubbles(){ bubblesRunning=false; }
+function showBubbles(){ clearTimeout(bubbleHideTimer); var h=document.getElementById('bubbles'); if(h) h.style.opacity='1'; resumeBubbles(); }
+function hideBubbles(){ var h=document.getElementById('bubbles'); if(h) h.style.opacity='0'; clearTimeout(bubbleHideTimer); bubbleHideTimer=setTimeout(pauseBubbles, 850); }  // fade out, then stop the loop (perf)
 function stepBubbles(){
-  var st=bubbleState; if(!st) return;
+  var st=bubbleState; if(!st || !bubblesRunning) return;
   var b=st.balls, W=st.host.clientWidth||st.W, H=st.host.clientHeight||st.H;
   // move + wall bounce (+ gyroscope gravity when available)
   for(var i=0;i<b.length;i++){
@@ -961,7 +967,7 @@ function stepBubbles(){
     var p=b[i];
     p.el.style.transform='translate('+(p.x-p.r)+'px,'+(p.y-p.r)+'px)';
   }
-  requestAnimationFrame(stepBubbles);
+  if(bubblesRunning) requestAnimationFrame(stepBubbles);
 }
 
 /* ===================== FIREBASE (shared cloud sync) ===================== */
@@ -1082,7 +1088,7 @@ function setupSwipe(){
 function flyToStart(){
   var list=document.getElementById('list');
   var start=document.getElementById('start');
-  startBubbles();
+  showBubbles();                         // bubbles fade back in
   start.classList.add('active');
   start.style.transition='none';
   start.style.transform='translateY(-100%)';             // start waits just above the screen
@@ -1103,6 +1109,7 @@ function flyToList(){
   var list=document.getElementById('list');
   var start=document.getElementById('start');
   render();
+  hideBubbles();                         // bubbles fade out on the activities screen
   list.classList.add('active');
   list.style.transition='none';
   list.style.transform='translateY(100%)';               // list waits below the screen
