@@ -14,6 +14,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
   :root{
     --glow-rgb:229,67,155;             /* subtle background glow (magenta default) */
@@ -228,6 +231,21 @@
     padding:0 16px;border-radius:12px;background:var(--btn);}
   .btn-cmt:active{transform:scale(.96);}
 
+  /* login screen */
+  .login-screen{position:absolute;inset:0;z-index:40;display:none;flex-direction:column;
+    align-items:center;justify-content:center;padding:26px;
+    background:linear-gradient(160deg,#fbfbfd 0%,#eceef3 100%);}
+  .login-screen.active{display:flex;}
+  .login-card{width:100%;max-width:360px;border-radius:28px;padding:30px 24px;}
+  .login-h{font-size:34px;font-weight:800;letter-spacing:-1px;text-align:center;color:var(--ink);line-height:1;}
+  .login-h span{color:var(--star-kasia);}
+  .login-sub{text-align:center;color:var(--muted);font-size:14px;margin:8px 0 22px;}
+  .login-err{color:#d23b6b;font-size:13px;min-height:18px;margin:2px 2px 10px;text-align:center;}
+  .logout-opt{margin-top:14px;margin-left:12px;display:inline-block;border:none;cursor:pointer;
+    color:var(--muted);font-family:inherit;font-size:14px;font-weight:600;padding:11px 20px;
+    border-radius:11px;background:transparent;}
+  .logout-opt:active{transform:scale(.97);}
+
   /* star expansion (rating) */
   .rate-who-label{font-size:12px;font-weight:500;color:var(--muted);margin:0 0 8px;}
   .rate-who-label span{color:var(--ink);font-weight:700;}
@@ -315,6 +333,18 @@
   </defs>
 </svg>
 <div class="app">
+
+  <!-- ===================== LOGIN SCREEN ===================== -->
+  <section id="login" class="login-screen active">
+    <div class="login-card glass">
+      <div class="login-h">Adventure <span>HUB</span></div>
+      <div class="login-sub">Zaloguj się, aby zobaczyć wspólną listę przygód</div>
+      <input id="logEmail" class="f-input" type="email" placeholder="E-mail" autocomplete="username">
+      <input id="logPass" class="f-input" type="password" placeholder="Hasło" autocomplete="current-password">
+      <div id="logErr" class="login-err"></div>
+      <button class="start-btn" onclick="doLogin()">Zaloguj</button>
+    </div>
+  </section>
 
   <!-- ===================== START SCREEN ===================== -->
   <section id="start" class="screen active">
@@ -415,6 +445,7 @@
       </div>
     </div>
     <button class="save-opt" onclick="saveOptions()">Save</button>
+    <button class="logout-opt" onclick="doLogout()">Wyloguj</button>
   </div>
 
 </div>
@@ -433,7 +464,7 @@ var state = {
   pendingTheme:'magenta',
   pendingUser:'kasia'
 };
-var activities = load() || seed();
+var activities = [];   // populated from Firestore after login
 
 function seed(){
   return [
@@ -447,7 +478,7 @@ function seed(){
 }
 function id(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function load(){ try{ return JSON.parse(localStorage.getItem('advhub.v2')); }catch(e){ return null; } }
-function save(){ localStorage.setItem('advhub.v2', JSON.stringify(activities)); }
+function save(){ if(docRef){ docRef.set({activities: activities}).catch(function(){}); } }
 function saveSettings(){ localStorage.setItem('advhub.set', JSON.stringify({theme:state.theme,user:state.user})); }
 function loadSettings(){ try{ return JSON.parse(localStorage.getItem('advhub.set')); }catch(e){ return null; } }
 
@@ -658,7 +689,7 @@ function addComment(idv){
   var inp=document.getElementById('cinput-'+idv); if(!inp) return;
   var t=inp.value.trim(); if(!t) return;
   var a=find(idv); if(!a.comments) a.comments=[];
-  a.comments.push({who:state.user, text:t});
+  a.comments.push({who:state.user, text:t, ts:Date.now()});
   save(); inp.value='';
   renderComments(idv);
   refreshHeight(idv);   // desc panel grew — adjust the open height
@@ -888,6 +919,79 @@ function stepBubbles(){
   requestAnimationFrame(stepBubbles);
 }
 
+/* ===================== FIREBASE (shared cloud sync) ===================== */
+var firebaseConfig = {
+  apiKey: "AIzaSyCHcOUks4jZigE_6QMOiW_YZya3fUIjWBc",
+  authDomain: "adventur-hub.firebaseapp.com",
+  projectId: "adventur-hub",
+  storageBucket: "adventur-hub.firebasestorage.app",
+  messagingSenderId: "175004817999",
+  appId: "1:175004817999:web:d0aad95e16f4153e64283a"
+};
+var db=null, auth=null, docRef=null, unsub=null;
+function sig(arr){   // stable signature (ignores object key order) to detect real changes
+  return JSON.stringify((arr||[]).map(function(a){
+    return [a.id,a.name,a.desc,a.k,a.m,(a.comments||[]).map(function(c){return [c.who,c.text,c.ts||''];})];
+  }));
+}
+
+function initFirebase(){
+  if(typeof firebase==='undefined'){ showLogin('Brak połączenia. Sprawdź internet i odśwież.'); return; }
+  try{
+    firebase.initializeApp(firebaseConfig);
+    auth=firebase.auth();
+    db=firebase.firestore();
+    try{ db.enablePersistence({synchronizeTabs:true}); }catch(e){}
+    docRef=db.collection('spaces').doc('main');
+    auth.onAuthStateChanged(function(user){ if(user){ onLoggedIn(); } else { showLogin(); } });
+  }catch(e){ showLogin('Błąd inicjalizacji. Odśwież stronę.'); }
+}
+function showLogin(msg){
+  if(unsub){ unsub(); unsub=null; }
+  var l=document.getElementById('login'); if(l) l.classList.add('active');
+  var e=document.getElementById('logErr'); if(e) e.textContent = msg || '';
+}
+function onLoggedIn(){
+  var l=document.getElementById('login'); if(l) l.classList.remove('active');
+  var e=document.getElementById('logErr'); if(e) e.textContent='';
+  if(unsub) return;
+  unsub=docRef.onSnapshot(function(snap){
+    if(!snap.exists){ docRef.set({activities: seed()}).catch(function(){}); return; }
+    var incoming = snap.data().activities || [];
+    if(sig(incoming) === sig(activities)) return;  // our own change / no change
+    activities = incoming;
+    if(document.getElementById('list').classList.contains('active')){
+      var o=captureOpen(); render(); restoreOpen(o);
+    }
+  }, function(){ /* ignore snapshot errors */ });
+}
+function doLogin(){
+  if(!auth){ return; }
+  var em=document.getElementById('logEmail').value.trim();
+  var pw=document.getElementById('logPass').value;
+  var err=document.getElementById('logErr'); err.textContent='';
+  if(!em || !pw){ err.textContent='Podaj e-mail i hasło.'; return; }
+  auth.signInWithEmailAndPassword(em, pw).catch(function(){
+    err.textContent='Nie udało się zalogować. Sprawdź e-mail i hasło.';
+  });
+}
+function doLogout(){ if(auth) auth.signOut(); var o=document.getElementById('options'); if(o) o.classList.remove('open'); }
+function captureOpen(){
+  var c=document.querySelector('.card.open'); if(!c) return null;
+  var id=c.id.replace('card-','');
+  var exp=document.getElementById('exp-'+id);
+  return {id:id, view:(exp && exp.classList.contains('show-rate'))?'rate':'desc'};
+}
+function restoreOpen(o){
+  if(!o) return;
+  var exp=document.getElementById('exp-'+o.id); if(!exp) return;
+  if(o.view==='rate') prepareRate(o.id);
+  exp.classList.toggle('show-rate', o.view==='rate');
+  exp.classList.add('open');
+  var card=document.getElementById('card-'+o.id); if(card) card.classList.add('open');
+  exp.style.maxHeight=slideOf(exp,o.view).scrollHeight+'px';
+}
+
 /* ===================== INIT ===================== */
 (function init(){
   var s=loadSettings();
@@ -900,6 +1004,7 @@ function stepBubbles(){
   document.getElementById('startLabel').textContent = "Let's start "+(state.user==='kasia'?'Kasia':'Michał')+"!";
   updateUserBadge();
   startBubbles();
+  initFirebase();
 })();
 
 /* ---- PWA: register service worker (offline + installable + auto-update) ---- */
