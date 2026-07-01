@@ -1079,6 +1079,72 @@ function setupSwipe(){
   }, {passive:true});
 }
 
+/* elastic transition list -> start (slingshot feel) */
+function flyToStart(){
+  var list=document.getElementById('list');
+  var start=document.getElementById('start');
+  startBubbles();
+  start.classList.add('active');
+  start.style.transition='none';
+  start.style.transform='scale(.9)';
+  start.style.opacity='0';
+  list.style.transition='transform .5s cubic-bezier(.3,0,.2,1)';
+  list.style.transform='translateY(105%)';               // list flies down & away
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    start.style.transition='transform .62s cubic-bezier(.34,1.56,.64,1), opacity .3s ease'; // overshoot = elastic
+    start.style.transform='none';
+    start.style.opacity='1';
+  });});
+  setTimeout(function(){
+    list.classList.remove('active');
+    list.style.transition=''; list.style.transform='';
+    start.style.transition=''; start.style.transform=''; start.style.opacity='';
+  }, 680);
+}
+
+/* elastic transition start -> list (catapult) */
+function flyToList(){
+  var list=document.getElementById('list');
+  var start=document.getElementById('start');
+  render();
+  list.classList.add('active');
+  list.style.transition='none';
+  list.style.transform='translateY(105%)';               // list comes up from the bottom
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    list.style.transition='transform .62s cubic-bezier(.34,1.56,.64,1)';  // overshoot = elastic
+    list.style.transform='none';
+  });});
+  setTimeout(function(){
+    start.classList.remove('active');
+    start.style.transition=''; start.style.transform=''; start.style.opacity='';
+    list.style.transition=''; list.style.transform='';
+  }, 680);
+}
+
+/* pull the start screen up -> catapult to the list */
+function setupPullForward(){
+  var start=document.getElementById('start'); if(!start) return;
+  var startY=0, pulling=false, dist=0;
+  start.addEventListener('touchstart', function(e){
+    if(e.target.closest && (e.target.closest('.settings-btn')||e.target.closest('.start-btn')||e.target.closest('.options'))){ pulling=false; return; }
+    startY=e.touches[0].clientY; pulling=true; dist=0; start.style.transition='none';
+  }, {passive:true});
+  start.addEventListener('touchmove', function(e){
+    if(!pulling) return;
+    var dy=e.touches[0].clientY-startY;
+    if(dy<0){ e.preventDefault(); dist=-dy; start.style.transform='translateY('+Math.max(dy*0.5,-190)+'px)'; }
+    else { start.style.transform=''; }
+  }, {passive:false});
+  function end(){
+    if(!pulling) return; pulling=false;
+    if(dist>150){ flyToList(); dist=0; return; }          // catapult to the list
+    start.style.transition='transform .32s cubic-bezier(.34,1.56,.64,1)'; start.style.transform='';
+    dist=0;
+  }
+  start.addEventListener('touchend', end, {passive:true});
+  start.addEventListener('touchcancel', end, {passive:true});
+}
+
 /* strong pull-down at the top of the list -> go back to the start screen */
 function setupPullBack(){
   var list=document.getElementById('list'); if(!list) return;
@@ -1100,8 +1166,8 @@ function setupPullBack(){
   }, {passive:false});
   function endPull(){
     if(!pulling) return; pulling=false;
-    list.style.transition='transform .3s ease'; list.style.transform='';
-    if(dist>150){ go('start'); }
+    if(dist>150){ flyToStart(); dist=0; return; }        // shot back to start, elastically
+    list.style.transition='transform .32s cubic-bezier(.34,1.56,.64,1)'; list.style.transform='';  // springy snap-back
     dist=0;
   }
   list.addEventListener('touchend', endPull, {passive:true});
@@ -1123,6 +1189,7 @@ function setupPullBack(){
   setupGyro();
   setupSwipe();
   setupPullBack();
+  setupPullForward();
   initFirebase();
 })();
 
