@@ -143,11 +143,11 @@
     display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.10);}
   .user-badge .ic svg{width:18px;height:18px;}
   .list-head{
-    display:grid;grid-template-columns:1fr 44px 44px;align-items:center;
-    padding:8px 40px 10px;column-gap:0;flex:0 0 auto;
+    display:grid;grid-template-columns:1fr auto;align-items:center;
+    padding:8px 40px 10px;column-gap:12px;flex:0 0 auto;
   }
   .list-head .h-act{font-size:13px;font-weight:500;color:var(--ink);}
-  .list-head .h-col{font-size:13px;font-weight:500;color:var(--ink);text-align:center;}
+  .list-head .h-col{font-size:13px;font-weight:500;color:var(--ink);text-align:right;}
   .scroll{flex:1;overflow-y:auto;padding:0 18px 40px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;}
   .scroll::-webkit-scrollbar{display:none;}
 
@@ -168,9 +168,10 @@
   .card:active{transform:scale(.992);}
   .card.open:active{transform:scale(1.004);}
   .card-row{
-    display:grid;grid-template-columns:1fr 44px 44px;align-items:center;
-    min-height:76px;padding:0 22px;column-gap:0;
+    display:grid;grid-template-columns:1fr auto;align-items:center;
+    min-height:76px;padding:0 22px;column-gap:12px;
   }
+  .row-right{display:flex;justify-content:flex-end;align-items:center;}
   .c-left{display:flex;align-items:center;gap:14px;min-width:0;}
   .plus-ic{
     width:28px;height:28px;border:2px solid var(--accent);border-radius:7px;flex:0 0 auto;
@@ -215,6 +216,17 @@
   .box-ghost:active{transform:scale(.96);background:var(--btn-strong);}
   .box-ghost .lbl{font-size:10px;font-weight:500;color:var(--muted);}
   .box-ghost .num{font-size:15px;font-weight:700;}
+  .rate-cta{
+    border:none;cursor:pointer;font-family:inherit;font-weight:700;font-size:14px;color:#5a3d00;
+    padding:9px 20px;border-radius:11px;letter-spacing:.2px;
+    background:linear-gradient(135deg,#ffe98a,#ffbf3b);
+    animation:goldPulse 1.8s ease-in-out infinite;
+  }
+  .rate-cta:active{transform:scale(.95);}
+  @keyframes goldPulse{
+    0%,100%{ box-shadow:0 2px 10px rgba(255,180,0,.45); filter:brightness(1); }
+    50%{ box-shadow:0 5px 22px rgba(255,200,0,.9); filter:brightness(1.1); }
+  }
 
   /* comments (inside description) */
   .cmt-label{font-size:12px;font-weight:500;color:var(--muted);margin:20px 0 10px;}
@@ -397,8 +409,7 @@
     </div>
     <div class="list-head">
       <div class="h-act">Aktywność</div>
-      <div class="h-col">Kasia</div>
-      <div class="h-col">Michał</div>
+      <div class="h-col">Ocena</div>
     </div>
     <div class="scroll">
       <div id="cards"></div>
@@ -464,12 +475,12 @@ var activities = [];   // populated from Firestore after login
 function ra(){ return Math.random()<0.5 ? 'kasia' : 'michal'; }   // random author
 function seed(){
   return [
-    {id:id(), name:'Bilard',            desc:'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam quis turpis id elit auctor laoreet. Quisque vitae tempor urna, in tincidunt mi. Sed eget ultrices quam. Vivamus facilisis odio at tellus consequat, at egestas ligula suscipit. <b>www.bilard.waw.pl</b>', k:7, m:6, author:ra(), comments:[{who:'kasia',text:'Uwielbiam bilard!'},{who:'michal',text:'Rewanż za tydzień 😉'}]},
-    {id:id(), name:'Wycieczka rowerowa', desc:'Trasa wzdłuż rzeki, około 30 km. <b>www.szlaki.pl</b>', k:8, m:null, author:ra(), comments:[]},
-    {id:id(), name:'Nurkowanie',         desc:'Kurs nurkowania na basenie, potem otwarta woda.', k:9, m:8, author:ra(), comments:[]},
-    {id:id(), name:'Rancho z kozami',    desc:'Weekend na ranczu, jazda konna i kozy.', k:6, m:null, author:ra(), comments:[]},
-    {id:id(), name:'SPA z Sauną',        desc:'Dzień relaksu, sauna fińska i masaż.', k:9, m:9, author:ra(), comments:[]},
-    {id:id(), name:'SPA z Sauną',        desc:'Druga lokalizacja, blisko domu.', k:7, m:null, author:ra(), comments:[]}
+    {id:id(), name:'Bilard',            desc:'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam quis turpis id elit auctor laoreet. Quisque vitae tempor urna, in tincidunt mi. Sed eget ultrices quam. Vivamus facilisis odio at tellus consequat, at egestas ligula suscipit. <b>www.bilard.waw.pl</b>', k:null, m:6, author:ra(), comments:[{who:'kasia',text:'Uwielbiam bilard!'},{who:'michal',text:'Rewanż za tydzień 😉'}]},
+    {id:id(), name:'Wycieczka rowerowa', desc:'Trasa wzdłuż rzeki, około 30 km. <b>www.szlaki.pl</b>', k:null, m:null, author:ra(), comments:[]},
+    {id:id(), name:'Nurkowanie',         desc:'Kurs nurkowania na basenie, potem otwarta woda.', k:null, m:8, author:ra(), comments:[]},
+    {id:id(), name:'Rancho z kozami',    desc:'Weekend na ranczu, jazda konna i kozy.', k:null, m:null, author:ra(), comments:[]},
+    {id:id(), name:'SPA z Sauną',        desc:'Dzień relaksu, sauna fińska i masaż.', k:null, m:9, author:ra(), comments:[]},
+    {id:id(), name:'SPA z Sauną',        desc:'Druga lokalizacja, blisko domu.', k:null, m:null, author:ra(), comments:[]}
   ];
 }
 function id(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
@@ -598,6 +609,10 @@ function card(a){
   var av = avg(a); var avgDisp = av>=0 ? av.toFixed(1) : '–';
   var auCls = a.author==='michal' ? 'm' : 'k';
   var auName = a.author ? (a.author==='kasia'?'Kasia':'Michał') : '—';
+  var myVal = state.user==='kasia' ? a.k : a.m;         // have I rated it?
+  var rightCell = (myVal!=null)
+    ? '<div class="box-ghost" onclick="openRateActive(\''+a.id+'\')"><span class="lbl">śr.</span><span class="num">'+avgDisp+'</span></div>'
+    : '<button class="rate-cta" onclick="openRateActive(\''+a.id+'\')">Oceń!</button>';
   return ''+
   '<div class="card glass" id="card-'+a.id+'">'+
     '<div class="card-row">'+
@@ -605,8 +620,7 @@ function card(a){
         '<div class="plus-ic" onclick="toggleDesc(\''+a.id+'\')"><svg viewBox="0 0 24 24" fill="none"><line class="v-line" x1="12" y1="6" x2="12" y2="18"/><line x1="6" y1="12" x2="18" y2="12"/></svg></div>'+
         '<div class="c-name">'+esc(a.name)+'</div>'+
       '</div>'+
-      '<div class="star-btn" onclick="toggleRate(\''+a.id+'\',\'kasia\')">'+starSVG(kOn,'k')+'</div>'+
-      '<div class="star-btn" onclick="toggleRate(\''+a.id+'\',\'michal\')">'+starSVG(mOn,'m')+'</div>'+
+      '<div class="row-right">'+rightCell+'</div>'+
     '</div>'+
     /* single expansion with a horizontal slider: [desc] <-> [rate] */
     '<div class="exp" id="exp-'+a.id+'"><div class="slider">'+
@@ -620,7 +634,6 @@ function card(a){
             '<button class="btn-edit" onclick="editActivity(\''+a.id+'\')">Edit</button>'+
             '<button class="btn-edit" onclick="cloneActivity(\''+a.id+'\')">Clone</button>'+
           '</div>'+
-          '<div class="box-ghost" title="Przejdź do oceny" onclick="openRateActive(\''+a.id+'\')"><span class="lbl">śr.</span><span class="num">'+avgDisp+'</span></div>'+
         '</div>'+
       '</div></div>'+
       /* slide 1: rating */
@@ -630,7 +643,6 @@ function card(a){
           '<div class="rate-stars" id="ratestars-'+a.id+'">'+ratingRow+'</div>'+
           '<div class="rate-actions">'+
             '<button class="btn-save-rate" onclick="saveRate(\''+a.id+'\')">Save</button>'+
-            '<div class="rate-val" id="rateval-'+a.id+'"><span class="lbl">śr.</span> –</div>'+
           '</div>'+
         '</div>'+
         '<div class="rate-block preview-block">'+
@@ -1085,43 +1097,52 @@ function setupSwipe(){
 }
 
 /* elastic transition list -> start (slingshot feel) */
+var scrTrans=null, transitioning=false;
 function flyToStart(){
+  clearTimeout(scrTrans); transitioning=true;   // cancel previous cleanup (prevents "everything disappears")
   var list=document.getElementById('list');
   var start=document.getElementById('start');
   showBubbles();                         // bubbles fade back in
-  start.classList.add('active');
-  start.style.transition='none';
-  start.style.transform='translateY(-100%)';             // start waits just above the screen
+  start.classList.add('active'); list.classList.add('active');   // both visible during the slide
+  start.style.transition='none'; start.style.transform='translateY(-100%)'; start.style.opacity='';
+  list.style.transition='none';
+  if(!list.style.transform){ list.style.transform='none'; }
+  void start.offsetWidth;
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     var e='transform .6s cubic-bezier(.34,1.4,.6,1)';
     start.style.transition=e; start.style.transform='none';            // start slides down into view (as one)
     list.style.transition=e;  list.style.transform='translateY(100%)'; // list slides down out
   });});
-  setTimeout(function(){
+  scrTrans=setTimeout(function(){
     list.classList.remove('active');
     list.style.transition=''; list.style.transform='';
     start.style.transition=''; start.style.transform=''; start.style.opacity='';
+    transitioning=false;
   }, 680);
 }
 
 /* elastic transition start -> list (catapult) */
 function flyToList(){
+  clearTimeout(scrTrans); transitioning=true;   // cancel previous cleanup
   var list=document.getElementById('list');
   var start=document.getElementById('start');
   render();
   hideBubbles();                         // bubbles fade out on the activities screen
-  list.classList.add('active');
-  list.style.transition='none';
-  list.style.transform='translateY(100%)';               // list waits below the screen
+  list.classList.add('active'); start.classList.add('active');
+  list.style.transition='none'; list.style.transform='translateY(100%)';   // list waits below the screen
+  start.style.transition='none';
+  if(!start.style.transform){ start.style.transform='none'; }
+  void list.offsetWidth;
   requestAnimationFrame(function(){ requestAnimationFrame(function(){
     var e='transform .6s cubic-bezier(.34,1.4,.6,1)';
     start.style.transition=e; start.style.transform='translateY(-100%)'; // whole start (title, sub, button, gear) slides up
     list.style.transition=e;  list.style.transform='none';              // list slides up into place
   });});
-  setTimeout(function(){
+  scrTrans=setTimeout(function(){
     start.classList.remove('active');
     start.style.transition=''; start.style.transform=''; start.style.opacity='';
     list.style.transition=''; list.style.transform='';
+    transitioning=false;
   }, 680);
 }
 
@@ -1130,6 +1151,7 @@ function setupPullForward(){
   var start=document.getElementById('start'); if(!start) return;
   var startY=0, pulling=false, dist=0;
   start.addEventListener('touchstart', function(e){
+    if(transitioning){ pulling=false; return; }
     if(e.target.closest && (e.target.closest('.settings-btn')||e.target.closest('.start-btn')||e.target.closest('.options'))){ pulling=false; return; }
     startY=e.touches[0].clientY; pulling=true; dist=0; start.style.transition='none';
   }, {passive:true});
@@ -1155,7 +1177,7 @@ function setupPullBack(){
   var scroll=list.querySelector('.scroll');
   var startY=0, pulling=false, dist=0;
   list.addEventListener('touchstart', function(e){
-    if(!scroll || scroll.scrollTop>0){ pulling=false; return; }
+    if(transitioning || !scroll || scroll.scrollTop>0){ pulling=false; return; }
     startY=e.touches[0].clientY; pulling=true; dist=0; list.style.transition='none';
   }, {passive:true});
   list.addEventListener('touchmove', function(e){
