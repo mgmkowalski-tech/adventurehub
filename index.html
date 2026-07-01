@@ -234,12 +234,14 @@
   /* login screen */
   .login-screen{position:absolute;inset:0;z-index:40;display:none;flex-direction:column;
     align-items:center;justify-content:center;padding:26px;
-    background:linear-gradient(160deg,#fbfbfd 0%,#eceef3 100%);}
+    background:
+      radial-gradient(125% 85% at 12% -12%, rgba(var(--glow-rgb),.22), transparent 55%),
+      radial-gradient(120% 90% at 105% 112%, rgba(var(--glow-rgb),.16), transparent 55%),
+      linear-gradient(160deg,#fbfbfd 0%,#eceef3 100%);}
   .login-screen.active{display:flex;}
-  .login-card{width:100%;max-width:360px;border-radius:28px;padding:30px 24px;}
-  .login-h{font-size:34px;font-weight:800;letter-spacing:-1px;text-align:center;color:var(--ink);line-height:1;}
-  .login-h span{color:var(--star-kasia);}
-  .login-sub{text-align:center;color:var(--muted);font-size:14px;margin:8px 0 22px;}
+  .login-title{text-align:center;margin-bottom:28px;}
+  .login-form{width:100%;max-width:340px;display:flex;flex-direction:column;}
+  .login-sub{text-align:center;color:var(--muted);font-size:14px;margin:0 0 20px;}
   .login-err{color:#d23b6b;font-size:13px;min-height:18px;margin:2px 2px 10px;text-align:center;}
   .logout-opt{margin-top:14px;margin-left:12px;display:inline-block;border:none;cursor:pointer;
     color:var(--muted);font-family:inherit;font-size:14px;font-weight:600;padding:11px 20px;
@@ -336,8 +338,11 @@
 
   <!-- ===================== LOGIN SCREEN ===================== -->
   <section id="login" class="login-screen active">
-    <div class="login-card glass">
-      <div class="login-h">Adventure <span>HUB</span></div>
+    <div class="login-title">
+      <div class="h-adv">Adventure</div>
+      <div class="h-hub">HUB</div>
+    </div>
+    <div class="login-form">
       <div class="login-sub">Zaloguj się, aby zobaczyć wspólną listę przygód</div>
       <input id="logEmail" class="f-input" type="email" placeholder="E-mail" autocomplete="username">
       <input id="logPass" class="f-input" type="password" placeholder="Hasło" autocomplete="current-password">
@@ -838,6 +843,30 @@ function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&a
 
 /* ===================== BUBBLE PHYSICS ===================== */
 var bubbleState=null;
+/* gyroscope tilt -> gravity for the bubbles */
+var gX=0, gY=0, gBase=null, gActive=false;
+function onOrient(e){
+  if(e.gamma==null || e.beta==null) return;
+  if(!gBase){ gBase={g:e.gamma, b:e.beta}; }   // how you're holding it now = neutral
+  gActive=true;
+  gX = Math.max(-0.30, Math.min(0.30, (e.gamma - gBase.g) * 0.010));  // tilt left/right
+  gY = Math.max(-0.30, Math.min(0.30, (e.beta  - gBase.b) * 0.010));  // tilt forward/back
+}
+function setupGyro(){
+  if(!window.DeviceOrientationEvent) return;
+  if(typeof DeviceOrientationEvent.requestPermission==='function'){
+    // iOS 13+: needs a tap to grant permission
+    var ask=function(){
+      DeviceOrientationEvent.requestPermission().then(function(r){
+        if(r==='granted') window.addEventListener('deviceorientation', onOrient);
+      }).catch(function(){});
+      document.removeEventListener('touchend', ask); document.removeEventListener('click', ask);
+    };
+    document.addEventListener('touchend', ask); document.addEventListener('click', ask);
+  } else {
+    window.addEventListener('deviceorientation', onOrient);   // Android
+  }
+}
 function startBubbles(){
   if(bubbleState) return; // already running
   var host=document.getElementById('bubbles');
@@ -862,9 +891,15 @@ function startBubbles(){
 function stepBubbles(){
   var st=bubbleState; if(!st) return;
   var b=st.balls, W=st.host.clientWidth||st.W, H=st.host.clientHeight||st.H;
-  // move + wall bounce
+  // move + wall bounce (+ gyroscope gravity when available)
   for(var i=0;i<b.length;i++){
     var p=b[i];
+    if(gActive){
+      p.vx+=gX; p.vy+=gY;
+      p.vx*=0.985; p.vy*=0.985;               // friction so they settle like marbles
+      var sp=Math.sqrt(p.vx*p.vx+p.vy*p.vy);
+      if(sp>6){ p.vx=p.vx/sp*6; p.vy=p.vy/sp*6; }
+    }
     p.x+=p.vx; p.y+=p.vy;
     if(p.x-p.r<0){ p.x=p.r; p.vx=Math.abs(p.vx); }
     if(p.x+p.r>W){ p.x=W-p.r; p.vx=-Math.abs(p.vx); }
@@ -999,6 +1034,7 @@ function restoreOpen(o){
   document.getElementById('startLabel').textContent = "Let's start "+(state.user==='kasia'?'Kasia':'Michał')+"!";
   updateUserBadge();
   startBubbles();
+  setupGyro();
   initFirebase();
 })();
 
