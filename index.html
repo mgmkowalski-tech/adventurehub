@@ -165,12 +165,16 @@
   .search-go svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;}
   .search-go:active{transform:scale(.95);}
   #map{flex:1;min-height:220px;border-radius:20px;overflow:hidden;background:rgba(255,255,255,.4);}
+  .map-label{ text-shadow:-1px -1px 0 rgba(0,0,0,.6),1px -1px 0 rgba(0,0,0,.6),-1px 1px 0 rgba(0,0,0,.6),1px 1px 0 rgba(0,0,0,.6),0 0 3px rgba(0,0,0,.55); }
   .map-add-btn{display:none;margin-top:12px;width:100%;border:none;cursor:pointer;color:#fff;font-family:inherit;
     font-size:16px;font-weight:700;padding:15px;border-radius:16px;
     background:linear-gradient(120deg, rgba(var(--glow-rgb),1), rgba(var(--glow-rgb),.72));
     box-shadow:0 10px 24px rgba(var(--glow-rgb),.30);}
   .map-add-btn .p{font-size:19px;margin-right:4px;}
   .map-add-btn:active{transform:scale(.98);}
+  .map-view-btn{display:none;margin-top:12px;width:100%;border:none;cursor:pointer;font-family:inherit;
+    font-size:14px;font-weight:600;color:var(--ink);padding:12px;border-radius:14px;background:var(--btn);}
+  .map-view-btn:active{transform:scale(.98);}
   .list-head{
     display:grid;grid-template-columns:1fr auto;align-items:center;
     padding:8px 40px 10px;column-gap:12px;flex:0 0 auto;
@@ -239,7 +243,8 @@
   .exp-pad{padding:2px 22px 22px;}
   .author-tag{font-size:9px;color:var(--muted);margin-bottom:12px;}
   .author-tag .cmt-who{font-weight:700;}
-  .desc-text{font-size:14px;line-height:1.55;color:rgba(38,43,58,.82);font-weight:400;}
+  .desc-text{font-size:14px;line-height:1.55;color:rgba(38,43,58,.82);font-weight:400;white-space:pre-wrap;word-break:break-word;}
+  .desc-text a{color:var(--star-michal);font-weight:600;}
   .desc-text b{font-weight:700;color:var(--ink);}
   .desc-actions{display:flex;justify-content:space-between;align-items:center;margin-top:22px;}
   .act-btns{display:flex;gap:10px;}
@@ -471,6 +476,7 @@
         </button>
       </div>
       <div id="map"></div>
+      <button id="viewOnMaps" class="map-view-btn" onclick="viewOnMaps()">🖼️ Zobacz w Google Maps (zdjęcia)</button>
       <button id="addFromMap" class="map-add-btn" onclick="addFromMap()"><span class="p">+</span> Add an Adventure</button>
     </div>
   </section>
@@ -1321,33 +1327,48 @@ function initMap(){
     ac=new google.maps.places.Autocomplete(input, {fields:['place_id','name','geometry','formatted_address','url']});
     ac.addListener('place_changed', function(){
       var p=ac.getPlace(); if(!p || !p.geometry) return;
-      var z = (currentCat==='vacation') ? 6 : 15;      // dla urlopu oddal (kraj), inaczej przybliż
-      gmap.panTo(p.geometry.location); gmap.setZoom(z); selectPlace(p);
+      gmap.panTo(p.geometry.location); gmap.setZoom(currentCat==='vacation'?6:15);
+      if(p.place_id) showPlaceById(p.place_id); else selectPlace(p);   // pobierz opis/ocenę
     });
     applyDiscoverTypes();
   } else { google.maps.event.trigger(gmap,'resize'); }
 }
 function showPlaceById(placeId){
-  if(!placesSvc) return;
-  placesSvc.getDetails({placeId:placeId, fields:['place_id','name','geometry','formatted_address','url']}, function(p,status){
+  if(!placesSvc || !placeId) return;
+  placesSvc.getDetails({placeId:placeId, fields:['place_id','name','geometry','formatted_address','url','editorial_summary','rating','user_ratings_total','website','price_level']}, function(p,status){
     if(status===google.maps.places.PlacesServiceStatus.OK && p && p.geometry){ gmap.panTo(p.geometry.location); selectPlace(p); }
   });
 }
 function selectPlace(p){
   var loc=p.geometry.location, lat=loc.lat(), lng=loc.lng();
-  selectedPlace={ name:p.name||'', address:p.formatted_address||'', lat:lat, lng:lng, placeId:p.place_id||'',
-    url: p.url || ('https://www.google.com/maps/search/?api=1&query='+lat+','+lng+(p.place_id?('&query_place_id='+p.place_id):'')) };
+  var url = p.url || ('https://www.google.com/maps/search/?api=1&query='+lat+','+lng+(p.place_id?('&query_place_id='+p.place_id):''));
+  var lines=[];
+  if(p.editorial_summary && p.editorial_summary.overview) lines.push(p.editorial_summary.overview);
+  var meta=[];
+  if(p.rating) meta.push('⭐ '+p.rating+(p.user_ratings_total?(' ('+p.user_ratings_total+' opinii)'):''));
+  if(typeof p.price_level==='number') meta.push('💰'.repeat(Math.max(1,p.price_level+1)));
+  if(meta.length) lines.push(meta.join('   '));
+  if(p.formatted_address) lines.push(p.formatted_address);
+  if(p.website) lines.push('🌐 '+p.website);
+  selectedPlace={ name:p.name||'', descText:lines.join('\n'), lat:lat, lng:lng, placeId:p.place_id||'', url:url };
   if(gmarker) gmarker.setMap(null);
-  gmarker=new google.maps.Marker({position:loc, map:gmap, animation:google.maps.Animation.DROP});
+  gmarker=new google.maps.Marker({position:loc, map:gmap, animation:google.maps.Animation.DROP, icon:dotIcon(10)});
   document.getElementById('addFromMap').style.display='block';
+  document.getElementById('viewOnMaps').style.display='block';
 }
+function viewOnMaps(){ if(selectedPlace && selectedPlace.url) window.open(selectedPlace.url, '_blank', 'noopener'); }
 var searchMarkers=[];
+function glowCss(){ var g=(getComputedStyle(document.documentElement).getPropertyValue('--glow-rgb')||'229,67,155').trim(); return 'rgb('+g+')'; }
+function dotIcon(size){ return { path:google.maps.SymbolPath.CIRCLE, scale:size, fillColor:glowCss(), fillOpacity:1, strokeColor:'#fff', strokeWeight:2 }; }
 function clearSearchMarkers(){ for(var i=0;i<searchMarkers.length;i++) searchMarkers[i].setMap(null); searchMarkers=[]; }
 function runTextSearch(){
   if(!placesSvc || !gmap){ loadMaps(); return; }
   var q=document.getElementById('placeSearch').value.trim(); if(!q) return;
   clearSearchMarkers();
   if(gmarker){ gmarker.setMap(null); gmarker=null; }
+  selectedPlace=null;
+  document.getElementById('addFromMap').style.display='none';
+  document.getElementById('viewOnMaps').style.display='none';
   var req={ query:q };
   var b=gmap.getBounds(); if(b) req.bounds=b;
   placesSvc.textSearch(req, function(results,status){
@@ -1356,8 +1377,9 @@ function runTextSearch(){
     results.slice(0,20).forEach(function(r){
       if(!r.geometry) return;
       var m=new google.maps.Marker({ position:r.geometry.location, map:gmap, title:r.name,
-        label:{ text:r.name, color:'#1e2230', fontSize:'11px', fontWeight:'600' } });
-      m.addListener('click', function(){ gmap.panTo(r.geometry.location); selectPlace(r); });
+        icon:dotIcon(7),
+        label:{ text:r.name, color:'#ffffff', fontSize:'11px', fontWeight:'700', className:'map-label' } });
+      m.addListener('click', (function(res){ return function(){ gmap.panTo(res.geometry.location); if(res.place_id) showPlaceById(res.place_id); else selectPlace(res); }; })(r));
       searchMarkers.push(m); bounds.extend(r.geometry.location);
     });
     gmap.fitBounds(bounds);
@@ -1368,7 +1390,7 @@ function addFromMap(){
   editId=null;
   document.getElementById('fName').value=selectedPlace.name;
   var link='<a href="'+selectedPlace.url+'" target="_blank" rel="noopener">📍 Otwórz w Google Maps</a>';
-  document.getElementById('fDesc').value=(selectedPlace.address? selectedPlace.address+'\n\n':'')+link;
+  document.getElementById('fDesc').value=(selectedPlace.descText? selectedPlace.descText+'\n\n':'')+link;
   document.getElementById('fStarK').classList.remove('on');
   document.getElementById('fStarM').classList.remove('on');
   document.getElementById('fDel').style.display='none';
