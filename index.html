@@ -362,6 +362,14 @@
   .add-row{display:flex;align-items:center;justify-content:center;gap:10px;min-height:76px;
     color:var(--faint);font-size:18px;font-weight:600;}
   .add-row .p{font-size:20px;font-weight:700;}
+  .bottom-actions{display:flex;gap:12px;margin-bottom:13px;}
+  .bottom-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;min-height:76px;
+    cursor:pointer;border-radius:30px;font-family:inherit;font-size:18px;font-weight:600;color:var(--faint);
+    background:rgba(255,255,255,.30);border:1px dashed rgba(38,43,58,.20);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:transform .12s, background .2s;}
+  .bottom-btn:active{transform:scale(.98);background:rgba(255,255,255,.5);}
+  .bottom-btn svg{width:19px;height:19px;stroke:var(--faint);fill:none;stroke-width:2;}
+  .bottom-btn .p{font-size:20px;font-weight:700;color:var(--faint);}
 
   /* ================= ADD/EDIT FORM (overlay card) ================= */
   .form-screen{position:absolute;inset:0;z-index:30;display:none;flex-direction:column;
@@ -483,8 +491,14 @@
     </div>
     <div class="scroll" id="listScroll">
       <div id="cards"></div>
-      <div class="add-card" onclick="openForm()">
-        <div class="add-row"><span class="p">+</span> Add an Adventure</div>
+      <div class="bottom-actions">
+        <button class="bottom-btn" onclick="toggleDiscover()">
+          <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          Discover
+        </button>
+        <button class="bottom-btn" onclick="openForm()">
+          <span class="p">+</span> Describe
+        </button>
       </div>
     </div>
     <div id="discover" class="discover-view">
