@@ -146,17 +146,29 @@
     padding:7px 13px;border-radius:12px;background:var(--btn);transition:background .15s, transform .12s;}
   .discover-btn.on{background:var(--btn-strong);}
   .discover-btn:active{transform:scale(.96);}
-  .discover-btn svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:2;}
+  .disc-ic{position:relative;width:18px;height:18px;flex:0 0 auto;}
+  .disc-ic svg{position:absolute;inset:0;width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:2;
+    transition:opacity .25s ease, transform .25s ease;}
+  .ic-close{opacity:0;transform:rotate(-90deg) scale(.5);}
+  .discover-btn.on .ic-search{opacity:0;transform:rotate(90deg) scale(.5);}
+  .discover-btn.on .ic-close{opacity:1;transform:none;}
   .discover-view{display:none;flex:1;flex-direction:column;min-height:0;padding:10px 18px 18px;}
+  .search-row{display:flex;gap:8px;margin-bottom:10px;}
   .place-search{width:100%;font-family:inherit;font-size:15px;padding:13px 15px;border-radius:14px;
     border:1px solid rgba(0,0,0,.06);background:rgba(0,0,0,.08);color:var(--ink);outline:none;margin-bottom:10px;
     box-shadow:inset 0 2px 7px rgba(0,0,0,.14);}
   .place-search::placeholder{color:var(--faint);}
+  .search-row .place-search{flex:1;margin-bottom:0;}
+  .search-go{flex:0 0 auto;width:48px;border:none;cursor:pointer;border-radius:14px;
+    background:linear-gradient(135deg, rgba(var(--glow-rgb),1), rgba(var(--glow-rgb),.72));
+    display:flex;align-items:center;justify-content:center;}
+  .search-go svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;}
+  .search-go:active{transform:scale(.95);}
   #map{flex:1;min-height:220px;border-radius:20px;overflow:hidden;background:rgba(255,255,255,.4);}
   .map-add-btn{display:none;margin-top:12px;width:100%;border:none;cursor:pointer;color:#fff;font-family:inherit;
     font-size:16px;font-weight:700;padding:15px;border-radius:16px;
-    background:linear-gradient(120deg,var(--star-kasia),var(--star-michal));
-    box-shadow:0 10px 24px rgba(120,60,140,.25);}
+    background:linear-gradient(120deg, rgba(var(--glow-rgb),1), rgba(var(--glow-rgb),.72));
+    box-shadow:0 10px 24px rgba(var(--glow-rgb),.30);}
   .map-add-btn .p{font-size:19px;margin-right:4px;}
   .map-add-btn:active{transform:scale(.98);}
   .list-head{
@@ -432,7 +444,10 @@
         </svg>
       </button>
       <div class="discover-btn" onclick="toggleDiscover()">
-        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        <span class="disc-ic">
+          <svg class="ic-search" viewBox="0 0 24 24" fill="none" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <svg class="ic-close" viewBox="0 0 24 24" fill="none" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
+        </span>
         <span class="disc-label">Discover</span>
       </div>
     </div>
@@ -449,7 +464,12 @@
       </div>
     </div>
     <div id="discover" class="discover-view">
-      <input id="placeSearch" class="place-search" type="text" placeholder="Szukaj miejsca po nazwie…" autocomplete="off">
+      <div class="search-row">
+        <input id="placeSearch" class="place-search" type="text" placeholder="Szukaj miejsca po nazwie…" autocomplete="off">
+        <button class="search-go" onclick="runTextSearch()" aria-label="Szukaj na mapie">
+          <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        </button>
+      </div>
       <div id="map"></div>
       <button id="addFromMap" class="map-add-btn" onclick="addFromMap()"><span class="p">+</span> Add an Adventure</button>
     </div>
@@ -1260,14 +1280,24 @@ function setupPullBack(){
 
 /* ===================== DISCOVER (Google Maps) ===================== */
 var discoverOn=false, mapsLoading=false, mapsReady=false;
-var gmap=null, gmarker=null, placesSvc=null, selectedPlace=null;
+var gmap=null, gmarker=null, placesSvc=null, selectedPlace=null, ac=null;
+function applyDiscoverTypes(){
+  if(!ac) return;
+  if(currentCat==='vacation') ac.setTypes(['(regions)']);                                  // kraje/regiony/miasta
+  else if(currentCat==='food') ac.setTypes(['restaurant','cafe','bakery','store','supermarket']); // restauracje i sklepy
+  else ac.setTypes([]);                                                                     // wszystkie miejsca
+}
 function toggleDiscover(){
   discoverOn=!discoverOn;
   document.getElementById('catTabs').style.display = discoverOn?'none':'';
   document.getElementById('listScroll').style.display = discoverOn?'none':'';
   document.getElementById('discover').style.display = discoverOn?'flex':'none';
   document.querySelector('.discover-btn').classList.toggle('on', discoverOn);
-  if(discoverOn) loadMaps();
+  var inp=document.getElementById('placeSearch');
+  if(inp) inp.placeholder = (currentCat==='vacation') ? 'Szukaj kraju, regionu lub miasta…'
+                          : (currentCat==='food')     ? 'Szukaj restauracji lub sklepu…'
+                          : 'Szukaj miejsca po nazwie…';
+  if(discoverOn){ loadMaps(); applyDiscoverTypes(); }
 }
 function loadMaps(){
   if(mapsReady){ initMap(); return; }
@@ -1288,11 +1318,13 @@ function initMap(){
     placesSvc=new google.maps.places.PlacesService(gmap);
     gmap.addListener('click', function(e){ if(e.placeId){ if(e.stop) e.stop(); showPlaceById(e.placeId); } });
     var input=document.getElementById('placeSearch');
-    var ac=new google.maps.places.Autocomplete(input, {fields:['place_id','name','geometry','formatted_address','url']});
+    ac=new google.maps.places.Autocomplete(input, {fields:['place_id','name','geometry','formatted_address','url']});
     ac.addListener('place_changed', function(){
       var p=ac.getPlace(); if(!p || !p.geometry) return;
-      gmap.panTo(p.geometry.location); gmap.setZoom(15); selectPlace(p);
+      var z = (currentCat==='vacation') ? 6 : 15;      // dla urlopu oddal (kraj), inaczej przybliż
+      gmap.panTo(p.geometry.location); gmap.setZoom(z); selectPlace(p);
     });
+    applyDiscoverTypes();
   } else { google.maps.event.trigger(gmap,'resize'); }
 }
 function showPlaceById(placeId){
@@ -1308,6 +1340,28 @@ function selectPlace(p){
   if(gmarker) gmarker.setMap(null);
   gmarker=new google.maps.Marker({position:loc, map:gmap, animation:google.maps.Animation.DROP});
   document.getElementById('addFromMap').style.display='block';
+}
+var searchMarkers=[];
+function clearSearchMarkers(){ for(var i=0;i<searchMarkers.length;i++) searchMarkers[i].setMap(null); searchMarkers=[]; }
+function runTextSearch(){
+  if(!placesSvc || !gmap){ loadMaps(); return; }
+  var q=document.getElementById('placeSearch').value.trim(); if(!q) return;
+  clearSearchMarkers();
+  if(gmarker){ gmarker.setMap(null); gmarker=null; }
+  var req={ query:q };
+  var b=gmap.getBounds(); if(b) req.bounds=b;
+  placesSvc.textSearch(req, function(results,status){
+    if(status!==google.maps.places.PlacesServiceStatus.OK || !results || !results.length) return;
+    var bounds=new google.maps.LatLngBounds();
+    results.slice(0,20).forEach(function(r){
+      if(!r.geometry) return;
+      var m=new google.maps.Marker({ position:r.geometry.location, map:gmap, title:r.name,
+        label:{ text:r.name, color:'#1e2230', fontSize:'11px', fontWeight:'600' } });
+      m.addListener('click', function(){ gmap.panTo(r.geometry.location); selectPlace(r); });
+      searchMarkers.push(m); bounds.extend(r.geometry.location);
+    });
+    gmap.fitBounds(bounds);
+  });
 }
 function addFromMap(){
   if(!selectedPlace) return;
