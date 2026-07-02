@@ -165,7 +165,7 @@
   .search-go svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;}
   .search-go:active{transform:scale(.95);}
   #map{flex:1;min-height:220px;border-radius:20px;overflow:hidden;background:rgba(255,255,255,.4);}
-  .map-label{ text-shadow:-1px -1px 0 rgba(0,0,0,.6),1px -1px 0 rgba(0,0,0,.6),-1px 1px 0 rgba(0,0,0,.6),1px 1px 0 rgba(0,0,0,.6),0 0 3px rgba(0,0,0,.55); }
+  .map-label{ text-shadow:-1.2px -1.2px 0 #fff,1.2px -1.2px 0 #fff,-1.2px 1.2px 0 #fff,1.2px 1.2px 0 #fff,0 0 3px #fff; }
   .map-add-btn{display:none;margin-top:12px;width:100%;border:none;cursor:pointer;color:#fff;font-family:inherit;
     font-size:16px;font-weight:700;padding:15px;border-radius:16px;
     background:linear-gradient(120deg, rgba(var(--glow-rgb),1), rgba(var(--glow-rgb),.72));
@@ -476,7 +476,7 @@
         </button>
       </div>
       <div id="map"></div>
-      <button id="viewOnMaps" class="map-view-btn" onclick="viewOnMaps()">🖼️ Zobacz w Google Maps (zdjęcia)</button>
+      <button id="viewOnMaps" class="map-view-btn" onclick="viewOnMaps()">Zobacz szczegóły</button>
       <button id="addFromMap" class="map-add-btn" onclick="addFromMap()"><span class="p">+</span> Add an Adventure</button>
     </div>
   </section>
@@ -1377,8 +1377,8 @@ function runTextSearch(){
     results.slice(0,20).forEach(function(r){
       if(!r.geometry) return;
       var m=new google.maps.Marker({ position:r.geometry.location, map:gmap, title:r.name,
-        icon:dotIcon(7),
-        label:{ text:r.name, color:'#ffffff', fontSize:'11px', fontWeight:'700', className:'map-label' } });
+        icon:dotIcon(11),
+        label:{ text:r.name, color:'#20242e', fontSize:'12px', fontWeight:'700', className:'map-label' } });
       m.addListener('click', (function(res){ return function(){ gmap.panTo(res.geometry.location); if(res.place_id) showPlaceById(res.place_id); else selectPlace(res); }; })(r));
       searchMarkers.push(m); bounds.extend(r.geometry.location);
     });
