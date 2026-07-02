@@ -142,6 +142,23 @@
   .user-badge .ic{width:34px;height:34px;border-radius:10px;background:rgba(0,0,0,.25);
     display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.10);}
   .user-badge .ic svg{width:18px;height:18px;}
+  .discover-btn{display:flex;align-items:center;gap:7px;cursor:pointer;color:var(--ink);font-weight:600;font-size:14px;
+    padding:7px 13px;border-radius:12px;background:var(--btn);transition:background .15s, transform .12s;}
+  .discover-btn.on{background:var(--btn-strong);}
+  .discover-btn:active{transform:scale(.96);}
+  .discover-btn svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:2;}
+  .discover-view{display:none;flex:1;flex-direction:column;min-height:0;padding:10px 18px 18px;}
+  .place-search{width:100%;font-family:inherit;font-size:15px;padding:13px 15px;border-radius:14px;
+    border:1px solid rgba(0,0,0,.06);background:rgba(0,0,0,.08);color:var(--ink);outline:none;margin-bottom:10px;
+    box-shadow:inset 0 2px 7px rgba(0,0,0,.14);}
+  .place-search::placeholder{color:var(--faint);}
+  #map{flex:1;min-height:220px;border-radius:20px;overflow:hidden;background:rgba(255,255,255,.4);}
+  .map-add-btn{display:none;margin-top:12px;width:100%;border:none;cursor:pointer;color:#fff;font-family:inherit;
+    font-size:16px;font-weight:700;padding:15px;border-radius:16px;
+    background:linear-gradient(120deg,var(--star-kasia),var(--star-michal));
+    box-shadow:0 10px 24px rgba(120,60,140,.25);}
+  .map-add-btn .p{font-size:19px;margin-right:4px;}
+  .map-add-btn:active{transform:scale(.98);}
   .list-head{
     display:grid;grid-template-columns:1fr auto;align-items:center;
     padding:8px 40px 10px;column-gap:12px;flex:0 0 auto;
@@ -405,17 +422,25 @@
           <circle cx="8"  cy="21" r="3" fill="#2a2f3d"/>
         </svg>
       </button>
-      <div class="user-badge" id="userBadge"></div>
+      <div class="discover-btn" onclick="toggleDiscover()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        <span class="disc-label">Discover</span>
+      </div>
     </div>
-    <div class="list-head">
+    <div class="list-head" id="listHead">
       <div class="h-act">Aktywność</div>
       <div class="h-col">Ocena</div>
     </div>
-    <div class="scroll">
+    <div class="scroll" id="listScroll">
       <div id="cards"></div>
       <div class="add-card" onclick="openForm()">
         <div class="add-row"><span class="p">+</span> Add an Adventure</div>
       </div>
+    </div>
+    <div id="discover" class="discover-view">
+      <input id="placeSearch" class="place-search" type="text" placeholder="Szukaj miejsca po nazwie…" autocomplete="off">
+      <div id="map"></div>
+      <button id="addFromMap" class="map-add-btn" onclick="addFromMap()"><span class="p">+</span> Add an Adventure</button>
     </div>
   </section>
 
@@ -863,6 +888,7 @@ function saveForm(){
     activities.push({id:id(), name:name, desc:desc||'Brak opisu.', k:null, m:null, author:state.user, comments:[]});
   }
   save(); closeForm(); flipRender();
+  if(discoverOn) toggleDiscover();   // came from the map -> show the list with the new activity
 }
 function deleteFromForm(){
   if(!editId) return;
@@ -996,6 +1022,8 @@ var EMAIL_USER = {
   'mgm.kowalski@gmail.com': 'michal',
   'kledzion93@gmail.com':   'kasia'
 };
+/* Google Maps — wklej tu swój klucz API (Maps JavaScript API + Places API) */
+var MAPS_KEY = 'AIzaSyDam0GNBgKl5LQG8qK8TiUc4PhsBYmURIA';
 var db=null, auth=null, docRef=null, unsub=null;
 /* preview mode: skip login + cloud everywhere except the real deployed site */
 var PREVIEW = !/github\.io$/i.test(location.hostname);
@@ -1177,7 +1205,7 @@ function setupPullBack(){
   var scroll=list.querySelector('.scroll');
   var startY=0, pulling=false, dist=0;
   list.addEventListener('touchstart', function(e){
-    if(transitioning || !scroll || scroll.scrollTop>0){ pulling=false; return; }
+    if(discoverOn || transitioning || !scroll || scroll.scrollTop>0){ pulling=false; return; }
     startY=e.touches[0].clientY; pulling=true; dist=0; list.style.transition='none';
   }, {passive:true});
   list.addEventListener('touchmove', function(e){
@@ -1198,6 +1226,69 @@ function setupPullBack(){
   }
   list.addEventListener('touchend', endPull, {passive:true});
   list.addEventListener('touchcancel', endPull, {passive:true});
+}
+
+/* ===================== DISCOVER (Google Maps) ===================== */
+var discoverOn=false, mapsLoading=false, mapsReady=false;
+var gmap=null, gmarker=null, placesSvc=null, selectedPlace=null;
+function toggleDiscover(){
+  discoverOn=!discoverOn;
+  document.getElementById('listHead').style.display = discoverOn?'none':'';
+  document.getElementById('listScroll').style.display = discoverOn?'none':'';
+  document.getElementById('discover').style.display = discoverOn?'flex':'none';
+  document.querySelector('.discover-btn').classList.toggle('on', discoverOn);
+  if(discoverOn) loadMaps();
+}
+function loadMaps(){
+  if(mapsReady){ initMap(); return; }
+  if(mapsLoading) return;
+  mapsLoading=true;
+  var s=document.createElement('script');
+  s.src='https://maps.googleapis.com/maps/api/js?key='+MAPS_KEY+'&libraries=places&language=pl&callback=onMapsReady';
+  s.async=true; s.defer=true;
+  s.onerror=function(){ mapsLoading=false; };
+  document.head.appendChild(s);
+}
+function onMapsReady(){ mapsReady=true; mapsLoading=false; initMap(); }
+function initMap(){
+  var el=document.getElementById('map'); if(!el || typeof google==='undefined') return;
+  if(!gmap){
+    gmap=new google.maps.Map(el, { center:{lat:52.2297,lng:21.0122}, zoom:12, clickableIcons:true,
+      mapTypeControl:false, streetViewControl:false, fullscreenControl:false });
+    placesSvc=new google.maps.places.PlacesService(gmap);
+    gmap.addListener('click', function(e){ if(e.placeId){ if(e.stop) e.stop(); showPlaceById(e.placeId); } });
+    var input=document.getElementById('placeSearch');
+    var ac=new google.maps.places.Autocomplete(input, {fields:['place_id','name','geometry','formatted_address','url']});
+    ac.addListener('place_changed', function(){
+      var p=ac.getPlace(); if(!p || !p.geometry) return;
+      gmap.panTo(p.geometry.location); gmap.setZoom(15); selectPlace(p);
+    });
+  } else { google.maps.event.trigger(gmap,'resize'); }
+}
+function showPlaceById(placeId){
+  if(!placesSvc) return;
+  placesSvc.getDetails({placeId:placeId, fields:['place_id','name','geometry','formatted_address','url']}, function(p,status){
+    if(status===google.maps.places.PlacesServiceStatus.OK && p && p.geometry){ gmap.panTo(p.geometry.location); selectPlace(p); }
+  });
+}
+function selectPlace(p){
+  var loc=p.geometry.location, lat=loc.lat(), lng=loc.lng();
+  selectedPlace={ name:p.name||'', address:p.formatted_address||'', lat:lat, lng:lng, placeId:p.place_id||'',
+    url: p.url || ('https://www.google.com/maps/search/?api=1&query='+lat+','+lng+(p.place_id?('&query_place_id='+p.place_id):'')) };
+  if(gmarker) gmarker.setMap(null);
+  gmarker=new google.maps.Marker({position:loc, map:gmap, animation:google.maps.Animation.DROP});
+  document.getElementById('addFromMap').style.display='block';
+}
+function addFromMap(){
+  if(!selectedPlace) return;
+  editId=null;
+  document.getElementById('fName').value=selectedPlace.name;
+  var link='<a href="'+selectedPlace.url+'" target="_blank" rel="noopener">📍 Otwórz w Google Maps</a>';
+  document.getElementById('fDesc').value=(selectedPlace.address? selectedPlace.address+'\n\n':'')+link;
+  document.getElementById('fStarK').classList.remove('on');
+  document.getElementById('fStarM').classList.remove('on');
+  document.getElementById('fDel').style.display='none';
+  showFormFrom(document.querySelector('.discover-btn'));
 }
 
 /* ===================== INIT ===================== */
