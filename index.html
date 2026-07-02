@@ -164,6 +164,9 @@
     display:flex;align-items:center;justify-content:center;}
   .search-go svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;}
   .search-go:active{transform:scale(.95);}
+  .place-search:disabled,.search-go:disabled{opacity:.5;cursor:not-allowed;}
+  .map-limit{display:none;background:rgba(229,67,155,.12);border:1px solid rgba(229,67,155,.32);
+    color:#b03a6e;font-size:13px;font-weight:600;padding:10px 12px;border-radius:12px;margin-bottom:10px;text-align:center;}
   #map{flex:1;min-height:220px;border-radius:20px;overflow:hidden;background:rgba(255,255,255,.4);}
   .map-label{ text-shadow:-1.2px -1.2px 0 #fff,1.2px -1.2px 0 #fff,-1.2px 1.2px 0 #fff,1.2px 1.2px 0 #fff,0 0 3px #fff; }
   .map-add-btn{display:none;margin-top:12px;width:100%;border:none;cursor:pointer;color:#fff;font-family:inherit;
@@ -491,6 +494,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
         </button>
       </div>
+      <div id="mapLimit" class="map-limit"></div>
       <div id="map"></div>
     </div>
     <div id="placePanel" class="place-panel">
@@ -1329,7 +1333,7 @@ function toggleDiscover(){
   if(inp) inp.placeholder = (currentCat==='vacation') ? 'Szukaj kraju, regionu lub miasta…'
                           : (currentCat==='food')     ? 'Szukaj restauracji lub sklepu…'
                           : 'Szukaj miejsca po nazwie…';
-  if(discoverOn){ loadMaps(); applyDiscoverTypes(); }
+  if(discoverOn){ loadMaps(); applyDiscoverTypes(); refreshMapLimitUI(); }
 }
 function loadMaps(){
   if(mapsReady){ initMap(); return; }
@@ -1361,6 +1365,8 @@ function initMap(){
 }
 function showPlaceById(placeId){
   if(!placesSvc || !placeId) return;
+  if(limitBlocked()) return;
+  bumpMaps();
   placesSvc.getDetails({placeId:placeId, fields:['place_id','name','geometry','formatted_address','url','editorial_summary','rating','user_ratings_total','website','price_level','photos']}, function(p,status){
     if(status===google.maps.places.PlacesServiceStatus.OK && p && p.geometry){ gmap.panTo(p.geometry.location); selectPlace(p); }
   });
@@ -1398,6 +1404,29 @@ function selectPlace(p){
 }
 function closePanel(){ var el=document.getElementById('placePanel'); if(el) el.classList.remove('open'); }
 function viewOnMaps(){ if(selectedPlace && selectedPlace.url) window.open(selectedPlace.url, '_blank', 'noopener'); }
+
+/* ---- daily Discovery usage cap (keeps Google Maps calls within the free tier) ---- */
+var MAPS_DAILY_LIMIT=40;
+function mapsUsage(){
+  var t=new Date().toISOString().slice(0,10), u=null;
+  try{ u=JSON.parse(localStorage.getItem('advhub.maps')); }catch(e){}
+  if(!u || u.d!==t) u={d:t, n:0};
+  return u;
+}
+function bumpMaps(){ var u=mapsUsage(); u.n++; try{ localStorage.setItem('advhub.maps', JSON.stringify(u)); }catch(e){} if(u.n>=MAPS_DAILY_LIMIT) lockMaps(); }
+function limitBlocked(){ if(mapsUsage().n>=MAPS_DAILY_LIMIT){ lockMaps(); return true; } return false; }
+function lockMaps(){
+  var el=document.getElementById('mapLimit');
+  if(el){ el.textContent='Osiągnięto dzienny limit Discovery ('+MAPS_DAILY_LIMIT+' wyszukań/dzień) — aby nie generować kosztów, wróć jutro 🙂'; el.style.display='block'; }
+  var inp=document.getElementById('placeSearch'); if(inp) inp.disabled=true;
+  var go=document.querySelector('.search-go'); if(go) go.disabled=true;
+}
+function refreshMapLimitUI(){
+  if(mapsUsage().n>=MAPS_DAILY_LIMIT){ lockMaps(); return; }
+  var el=document.getElementById('mapLimit'); if(el) el.style.display='none';
+  var inp=document.getElementById('placeSearch'); if(inp) inp.disabled=false;
+  var go=document.querySelector('.search-go'); if(go) go.disabled=false;
+}
 var searchMarkers=[];
 function glowCss(){ var g=(getComputedStyle(document.documentElement).getPropertyValue('--glow-rgb')||'229,67,155').trim(); return 'rgb('+g+')'; }
 function dotIcon(size){ return { path:google.maps.SymbolPath.CIRCLE, scale:size, fillColor:glowCss(), fillOpacity:1, strokeColor:'#fff', strokeWeight:2 }; }
@@ -1405,6 +1434,8 @@ function clearSearchMarkers(){ for(var i=0;i<searchMarkers.length;i++) searchMar
 function runTextSearch(){
   if(!placesSvc || !gmap){ loadMaps(); return; }
   var q=document.getElementById('placeSearch').value.trim(); if(!q) return;
+  if(limitBlocked()) return;
+  bumpMaps();
   clearSearchMarkers();
   if(gmarker){ gmarker.setMap(null); gmarker=null; }
   selectedPlace=null;
