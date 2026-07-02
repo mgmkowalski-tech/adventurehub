@@ -172,9 +172,25 @@
     box-shadow:0 10px 24px rgba(var(--glow-rgb),.30);}
   .map-add-btn .p{font-size:19px;margin-right:4px;}
   .map-add-btn:active{transform:scale(.98);}
-  .map-view-btn{display:none;margin-top:12px;width:100%;border:none;cursor:pointer;font-family:inherit;
+  .map-view-btn{margin-top:12px;width:100%;border:none;cursor:pointer;font-family:inherit;
     font-size:14px;font-weight:600;color:var(--ink);padding:12px;border-radius:14px;background:var(--btn);}
   .map-view-btn:active{transform:scale(.98);}
+  /* place panel (Google-Maps-like sheet) */
+  .place-panel{position:absolute;left:0;right:0;bottom:0;z-index:6;
+    background:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-radius:24px 24px 0 0;box-shadow:0 -10px 34px rgba(40,44,70,.20);
+    padding:8px 18px calc(16px + env(safe-area-inset-bottom));
+    transform:translateY(112%);transition:transform .36s cubic-bezier(.22,1,.36,1);
+    max-height:78%;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .place-panel.open{transform:translateY(0);}
+  .pp-photos{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin:6px 0 12px;-webkit-overflow-scrolling:touch;}
+  .pp-photos:empty{display:none;}
+  .pp-photo{height:130px;width:auto;border-radius:14px;flex:0 0 auto;object-fit:cover;background:#eee;}
+  .pp-name{font-size:19px;font-weight:800;color:var(--ink);line-height:1.15;}
+  .pp-meta{font-size:13px;color:var(--muted);margin-top:4px;}
+  .pp-addr{font-size:13px;color:rgba(38,43,58,.7);margin-top:6px;}
+  .pp-actions{display:flex;gap:10px;margin-top:14px;}
+  .pp-actions .map-view-btn,.pp-actions .map-add-btn{display:block;margin-top:0;flex:1;width:auto;}
   .list-head{
     display:grid;grid-template-columns:1fr auto;align-items:center;
     padding:8px 40px 10px;column-gap:12px;flex:0 0 auto;
@@ -476,8 +492,17 @@
         </button>
       </div>
       <div id="map"></div>
-      <button id="viewOnMaps" class="map-view-btn" onclick="viewOnMaps()">Zobacz szczegóły</button>
-      <button id="addFromMap" class="map-add-btn" onclick="addFromMap()"><span class="p">+</span> Add an Adventure</button>
+    </div>
+    <div id="placePanel" class="place-panel">
+      <div class="grab"></div>
+      <div class="pp-photos" id="ppPhotos"></div>
+      <div class="pp-name" id="ppName"></div>
+      <div class="pp-meta" id="ppMeta"></div>
+      <div class="pp-addr" id="ppAddr"></div>
+      <div class="pp-actions">
+        <button class="map-view-btn" onclick="viewOnMaps()">Zobacz szczegóły</button>
+        <button class="map-add-btn" onclick="addFromMap()"><span class="p">+</span> Add an Adventure</button>
+      </div>
     </div>
   </section>
 
@@ -1299,6 +1324,7 @@ function toggleDiscover(){
   document.getElementById('listScroll').style.display = discoverOn?'none':'';
   document.getElementById('discover').style.display = discoverOn?'flex':'none';
   document.querySelector('.discover-btn').classList.toggle('on', discoverOn);
+  if(!discoverOn) closePanel();
   var inp=document.getElementById('placeSearch');
   if(inp) inp.placeholder = (currentCat==='vacation') ? 'Szukaj kraju, regionu lub miasta…'
                           : (currentCat==='food')     ? 'Szukaj restauracji lub sklepu…'
@@ -1322,7 +1348,7 @@ function initMap(){
     gmap=new google.maps.Map(el, { center:{lat:52.2297,lng:21.0122}, zoom:12, clickableIcons:true,
       mapTypeControl:false, streetViewControl:false, fullscreenControl:false });
     placesSvc=new google.maps.places.PlacesService(gmap);
-    gmap.addListener('click', function(e){ if(e.placeId){ if(e.stop) e.stop(); showPlaceById(e.placeId); } });
+    gmap.addListener('click', function(e){ if(e.placeId){ if(e.stop) e.stop(); showPlaceById(e.placeId); } else { closePanel(); } });
     var input=document.getElementById('placeSearch');
     ac=new google.maps.places.Autocomplete(input, {fields:['place_id','name','geometry','formatted_address','url']});
     ac.addListener('place_changed', function(){
@@ -1335,7 +1361,7 @@ function initMap(){
 }
 function showPlaceById(placeId){
   if(!placesSvc || !placeId) return;
-  placesSvc.getDetails({placeId:placeId, fields:['place_id','name','geometry','formatted_address','url','editorial_summary','rating','user_ratings_total','website','price_level']}, function(p,status){
+  placesSvc.getDetails({placeId:placeId, fields:['place_id','name','geometry','formatted_address','url','editorial_summary','rating','user_ratings_total','website','price_level','photos']}, function(p,status){
     if(status===google.maps.places.PlacesServiceStatus.OK && p && p.geometry){ gmap.panTo(p.geometry.location); selectPlace(p); }
   });
 }
@@ -1352,10 +1378,25 @@ function selectPlace(p){
   if(p.website) lines.push('🌐 '+p.website);
   selectedPlace={ name:p.name||'', descText:lines.join('\n'), lat:lat, lng:lng, placeId:p.place_id||'', url:url };
   if(gmarker) gmarker.setMap(null);
-  gmarker=new google.maps.Marker({position:loc, map:gmap, animation:google.maps.Animation.DROP, icon:dotIcon(10)});
-  document.getElementById('addFromMap').style.display='block';
-  document.getElementById('viewOnMaps').style.display='block';
+  gmarker=new google.maps.Marker({position:loc, map:gmap, animation:google.maps.Animation.DROP, icon:dotIcon(11)});
+  // fill the Google-Maps-like panel
+  var ph=document.getElementById('ppPhotos'); ph.innerHTML='';
+  if(p.photos && p.photos.length){
+    for(var i=0;i<Math.min(8,p.photos.length);i++){
+      var img=document.createElement('img'); img.className='pp-photo';
+      try{ img.src=p.photos[i].getUrl({maxWidth:520,maxHeight:340}); }catch(e){}
+      ph.appendChild(img);
+    }
+  }
+  document.getElementById('ppName').textContent=p.name||'';
+  var mm=[];
+  if(p.rating) mm.push('⭐ '+p.rating+(p.user_ratings_total?(' · '+p.user_ratings_total+' opinii'):''));
+  if(typeof p.price_level==='number') mm.push('💰'.repeat(Math.max(1,p.price_level+1)));
+  document.getElementById('ppMeta').textContent=mm.join('    ');
+  document.getElementById('ppAddr').textContent=p.formatted_address||'';
+  document.getElementById('placePanel').classList.add('open');
 }
+function closePanel(){ var el=document.getElementById('placePanel'); if(el) el.classList.remove('open'); }
 function viewOnMaps(){ if(selectedPlace && selectedPlace.url) window.open(selectedPlace.url, '_blank', 'noopener'); }
 var searchMarkers=[];
 function glowCss(){ var g=(getComputedStyle(document.documentElement).getPropertyValue('--glow-rgb')||'229,67,155').trim(); return 'rgb('+g+')'; }
@@ -1367,8 +1408,7 @@ function runTextSearch(){
   clearSearchMarkers();
   if(gmarker){ gmarker.setMap(null); gmarker=null; }
   selectedPlace=null;
-  document.getElementById('addFromMap').style.display='none';
-  document.getElementById('viewOnMaps').style.display='none';
+  closePanel();
   var req={ query:q };
   var b=gmap.getBounds(); if(b) req.bounds=b;
   placesSvc.textSearch(req, function(results,status){
