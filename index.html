@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#f7f7fa">
-<title>Adventure HUB · Kasia & Michał</title>
+<title>Outsy · adventure hub</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Adventure HUB">
+<meta name="apple-mobile-web-app-title" content="Outsy">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -83,6 +83,24 @@
   .h-adv{font-size:48px;font-weight:700;line-height:1;letter-spacing:-1px;}
   .h-hub{font-size:104px;font-weight:800;line-height:.92;letter-spacing:-3px;margin-top:-2px;}
   .h-sub{position:absolute;top:62%;font-size:17px;font-weight:500;color:var(--faint);}
+  .brand-mark{width:120px;height:120px;display:block;margin:0 auto 16px;
+    transform-origin:center;animation:heartbeat 1.6s ease-in-out infinite;will-change:transform;}
+  @keyframes heartbeat{
+    0%{transform:scale(1);}
+    12%{transform:scale(1.13);}
+    24%{transform:scale(1);}
+    36%{transform:scale(1.13);}
+    52%{transform:scale(1);}
+    100%{transform:scale(1);}
+  }
+  .brand-name{font-family:'Poppins',sans-serif;font-size:52px;font-weight:800;letter-spacing:-1.5px;color:var(--ink);text-align:center;line-height:1;}
+  .brand-sub{font-size:16px;font-weight:500;color:var(--muted);text-align:center;letter-spacing:.4px;margin-top:2px;}
+  .wordmark{display:block;margin:0 auto;width:172px;height:66px;color:var(--ink);}
+  .wordmark-sm{width:86px;height:33px;flex:0 0 auto;color:var(--ink);}
+  .list-logo{display:flex;align-items:center;gap:10px;padding:16px 18px 2px;flex:0 0 auto;}
+  .sygnet-sm{width:34px;height:34px;flex:0 0 auto;}
+  .list-logo-txt .ln{font-size:20px;font-weight:800;color:var(--ink);line-height:1;letter-spacing:-.5px;}
+  .list-logo-txt .ls{font-size:10px;font-weight:500;color:var(--muted);letter-spacing:.4px;margin-top:1px;}
   .start-btn-wrap{position:relative;z-index:2;padding:0 18px 40px;}
   .start-btn{
     width:100%;border:none;cursor:pointer;color:var(--ink);
@@ -164,6 +182,13 @@
     display:flex;align-items:center;justify-content:center;}
   .search-go svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;}
   .search-go:active{transform:scale(.95);}
+  .disc-close{flex:0 0 auto;width:46px;border:none;cursor:pointer;border-radius:14px;background:rgba(0,0,0,.08);
+    display:flex;align-items:center;justify-content:center;}
+  .disc-close svg{width:18px;height:18px;stroke:var(--ink);fill:none;stroke-width:2.2;}
+  .disc-close:active{transform:scale(.95);}
+  .view-seg{margin:16px 18px 8px;}
+  .view-seg .cat-thumb{width:calc((100% - 10px)/2);}
+  .cat-seg#catTabs{margin-top:0;}
   .place-search:disabled,.search-go:disabled{opacity:.5;cursor:not-allowed;}
   .map-limit{display:none;background:rgba(229,67,155,.12);border:1px solid rgba(229,67,155,.32);
     color:#b03a6e;font-size:13px;font-weight:600;padding:10px 12px;border-radius:12px;margin-bottom:10px;text-align:center;}
@@ -215,11 +240,11 @@
   /* blob/goo layer behind the cards */
   #cards{position:relative;}
   #aura{position:absolute;inset:0;z-index:0;filter:url(#goo);pointer-events:none;}
-  .aura-blob{position:absolute;background:rgba(var(--glow-rgb),.12);border-radius:32px;}
+  .aura-blob{position:absolute;background:rgba(var(--glow-rgb),.12);border-radius:16px;}
 
   .card{
     position:relative;z-index:1;
-    border-radius:30px;margin-bottom:13px;overflow:hidden;
+    border-radius:16px;margin-bottom:13px;overflow:hidden;
     transition:background .25s ease, box-shadow .4s ease, transform .42s cubic-bezier(.34,1.3,.5,1);
   }
   .card.open{
@@ -266,7 +291,7 @@
   .desc-text a{color:var(--star-michal);font-weight:600;}
   .desc-text b{font-weight:700;color:var(--ink);}
   .desc-actions{display:flex;justify-content:space-between;align-items:center;margin-top:22px;}
-  .act-btns{display:flex;gap:10px;}
+  .act-btns{display:flex;gap:8px;flex-wrap:wrap;}
   .btn-edit{
     border:none;cursor:pointer;color:var(--ink);font-family:inherit;font-size:14px;font-weight:600;
     padding:9px 18px;border-radius:10px;background:var(--btn);
@@ -279,15 +304,17 @@
   .box-ghost .lbl{font-size:10px;font-weight:500;color:var(--muted);}
   .box-ghost .num{font-size:15px;font-weight:700;}
   .rate-cta{
-    border:none;cursor:pointer;font-family:inherit;font-weight:700;font-size:14px;color:#5a3d00;
-    padding:9px 20px;border-radius:11px;letter-spacing:.2px;
-    background:linear-gradient(135deg,#ffe98a,#ffbf3b);
-    animation:goldPulse 1.8s ease-in-out infinite;
+    cursor:pointer;font-family:inherit;font-weight:600;font-size:13px;letter-spacing:.3px;
+    color:rgba(var(--glow-rgb),.95);
+    padding:9px 18px;border-radius:11px;
+    background:rgba(var(--glow-rgb),.12);
+    border:none;
+    animation:ctaBreathe 2.8s ease-in-out infinite;
   }
-  .rate-cta:active{transform:scale(.95);}
-  @keyframes goldPulse{
-    0%,100%{ box-shadow:0 2px 10px rgba(255,180,0,.45); filter:brightness(1); }
-    50%{ box-shadow:0 5px 22px rgba(255,200,0,.9); filter:brightness(1.1); }
+  .rate-cta:active{transform:scale(.96);}
+  @keyframes ctaBreathe{
+    0%,100%{ box-shadow:0 0 0 0 rgba(var(--glow-rgb),0); }
+    50%{ box-shadow:0 0 0 4px rgba(var(--glow-rgb),.12); }
   }
 
   /* comments (inside description) */
@@ -327,6 +354,8 @@
   .logout-opt:active{transform:scale(.97);}
 
   /* star expansion (rating) */
+  .rate-title{display:none;font-size:15px;font-weight:500;color:var(--ink);margin:2px 0 12px;}
+  body.dark .rate-title{display:block;}
   .rate-who-label{font-size:12px;font-weight:500;color:var(--muted);margin:0 0 8px;}
   .rate-who-label span{color:var(--ink);font-weight:700;}
   .rate-stars{display:flex;justify-content:space-between;margin:4px 0 18px;}
@@ -364,7 +393,7 @@
   .add-row .p{font-size:20px;font-weight:700;}
   .bottom-actions{display:flex;gap:12px;margin-bottom:13px;}
   .bottom-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;min-height:76px;
-    cursor:pointer;border-radius:30px;font-family:inherit;font-size:18px;font-weight:600;color:var(--faint);
+    cursor:pointer;border-radius:16px;font-family:inherit;font-size:18px;font-weight:600;color:var(--faint);
     background:rgba(255,255,255,.30);border:1px dashed rgba(38,43,58,.20);
     backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:transform .12s, background .2s;}
   .bottom-btn:active{transform:scale(.98);background:rgba(255,255,255,.5);}
@@ -407,6 +436,52 @@
     margin-left:auto;border:none;cursor:pointer;color:var(--muted);font-family:inherit;
     font-size:14px;font-weight:600;padding:13px 18px;border-radius:14px;background:var(--btn);
   }
+  /* ===== dark theme (Archiwum) ===== */
+  body.dark{
+    --ink:#eaecf3;
+    --muted:rgba(234,236,243,.6);
+    --faint:rgba(234,236,243,.42);
+    --glass:rgba(255,255,255,0.09);
+    --glass-line:rgba(255,255,255,0.16);
+    --btn:rgba(255,255,255,.09);
+    --btn-strong:rgba(255,255,255,.16);
+    --field:rgba(255,255,255,.10);
+    --field-line:rgba(255,255,255,.16);
+    --star-off:#454c5e;
+    background:
+      radial-gradient(125% 85% at 12% -12%, rgba(var(--glow-rgb),.26), transparent 55%),
+      radial-gradient(120% 90% at 105% 112%, rgba(var(--glow-rgb),.16), transparent 55%),
+      linear-gradient(160deg,#141821 0%,#0b0e14 100%);
+  }
+  body.dark .desc-text{color:rgba(234,236,243,.82);}
+  body.dark .cmt-txt{color:rgba(234,236,243,.78);}
+  body.dark .pp-addr{color:rgba(234,236,243,.7);}
+  body.dark .rate-block + .rate-block{border-top-color:rgba(255,255,255,.12);}
+  body.dark .cat-seg{background:rgba(255,255,255,.08);}
+  body.dark .glass{box-shadow:inset 0 1px 1px rgba(255,255,255,.14), 0 10px 28px rgba(0,0,0,.40);}
+  body.dark .card.open{box-shadow:inset 0 1px 1px rgba(255,255,255,.14), 0 18px 40px rgba(0,0,0,.5);}
+
+  /* ===== flat theme (solid cards, no glass/blur/bubbles) ===== */
+  body.flat{ --surface:#ffffff; background:#eef0f3; }
+  body.flat.dark{ --surface:#1b1f2b; background:#0f131a; }
+  body.flat #bubbles{ display:none; }
+  body.flat #aura{ display:none; }
+  body.flat .glass{ background:var(--surface); backdrop-filter:none;-webkit-backdrop-filter:none;
+    border:1px solid rgba(20,24,40,.05); box-shadow:0 3px 14px rgba(30,34,60,.07); }
+  body.flat.dark .glass{ border-color:rgba(255,255,255,.06); box-shadow:0 3px 14px rgba(0,0,0,.45); }
+  body.flat .card.open{ box-shadow:0 8px 22px rgba(30,34,60,.12); }
+  body.flat.dark .card.open{ box-shadow:0 8px 22px rgba(0,0,0,.55); }
+  body.flat .start-btn{ background:var(--surface); backdrop-filter:none;-webkit-backdrop-filter:none;
+    border:1px solid rgba(20,24,40,.05); box-shadow:0 6px 18px rgba(30,34,60,.10); }
+  body.flat .bottom-btn{ background:var(--surface); backdrop-filter:none;-webkit-backdrop-filter:none;
+    border:1px solid rgba(20,24,40,.06); }
+  body.flat .place-panel{ background:var(--surface); backdrop-filter:none;-webkit-backdrop-filter:none; }
+  /* style toggle in options */
+  .style-opts{display:flex;flex-direction:column;gap:10px;}
+  .style-opt{flex:1;border:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;color:var(--muted);
+    padding:10px 6px;border-radius:11px;background:rgba(20,24,40,.06);transition:all .15s;}
+  .style-opt.sel{background:linear-gradient(120deg,var(--star-kasia),var(--star-michal));color:#fff;}
+  .style-opt:active{transform:scale(.97);}
 </style>
 </head>
 <body>
@@ -418,16 +493,42 @@
       <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo"/>
       <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
     </filter>
+    <linearGradient id="outsyGrad" x1="33.4" y1="0" x2="125.2" y2="183.7" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E64CB"/><stop offset="1" stop-color="#FF4EAC"/>
+    </linearGradient>
+    <symbol id="sygnetSym" viewBox="0 0 184 184">
+      <path d="M112.232 133.59C111.791 136.052 108.981 137.306 106.937 135.843C102.664 132.823 97.4395 131.058 91.7965 131.058C86.1536 131.058 80.9519 132.823 76.6558 135.843C74.6123 137.283 71.8024 136.052 71.3612 133.59C69.457 122.744 60.8881 114.174 50.0434 112.269C47.5819 111.828 46.3279 109.018 47.7909 106.974C50.8097 102.701 52.5746 97.475 52.5746 91.8313C52.5746 86.1877 50.8097 80.9853 47.7909 76.6887C46.3511 74.6449 47.5819 71.8347 50.0434 71.3934C60.8648 69.489 69.457 60.9422 71.3612 50.0729C71.8024 47.6111 74.6123 46.3569 76.6558 47.8201C80.9286 50.8394 86.1536 52.6045 91.7965 52.6045C97.4395 52.6045 102.641 50.8394 106.937 47.8201C108.981 46.3802 111.791 47.6111 112.232 50.0729C114.136 60.919 122.705 69.489 133.55 71.3934C136.011 71.8347 137.265 74.6449 135.802 76.6887C132.783 80.9621 131.018 86.1877 131.018 91.8313C131.018 97.475 132.783 102.677 135.802 106.974C137.242 109.018 136.011 111.828 133.55 112.269C122.705 114.174 114.136 122.744 112.232 133.59ZM183.616 91.8313C183.616 81.984 178.182 73.3675 170.148 68.8619C164.435 65.6569 161.602 59.0378 163.413 52.7438C164.203 50.0265 164.551 47.1234 164.388 44.1041C163.692 30.7498 152.847 19.9038 139.518 19.2302C136.569 19.0677 133.735 19.416 131.065 20.1592C124.795 21.9011 118.014 19.3696 114.879 13.6563C110.421 5.52753 101.782 0 91.8197 0C81.8575 0 73.3583 5.41141 68.8532 13.4705C65.6486 19.1838 59.0303 22.0172 52.7371 20.2057C50.0202 19.4393 47.1174 19.0677 44.0986 19.2302C30.7691 19.927 19.9012 30.773 19.2278 44.1041C19.0653 47.1001 19.4136 50.0033 20.2031 52.7206C21.9912 59.0378 19.1814 65.6569 13.4455 68.8619C5.41072 73.3675 0 81.984 0 91.8313C0 101.679 5.43394 110.295 13.4688 114.801C19.1814 118.006 22.0144 124.625 20.2031 130.919C19.4368 133.636 19.0653 136.539 19.2278 139.559C19.9245 152.913 30.7691 163.759 44.0986 164.432C47.0942 164.595 49.9969 164.247 52.7139 163.457C59.0303 161.645 65.6486 164.479 68.8764 170.215C73.3815 178.251 81.9969 183.663 91.843 183.663C101.689 183.663 110.444 178.135 114.902 170.03C118.037 164.316 124.841 161.785 131.135 163.527C133.805 164.27 136.638 164.595 139.564 164.456C152.917 163.759 163.761 152.913 164.435 139.582C164.597 136.586 164.249 133.683 163.46 130.965C161.648 124.648 164.481 118.029 170.217 114.824C178.252 110.318 183.663 101.702 183.663 91.8546" fill="url(#outsyGrad)"/>
+    </symbol>
+    <symbol id="wordmarkSym" viewBox="0 0 185 71">
+      <g fill="currentColor">
+      <path d="M133.129 61.6555C133.474 61.0516 133.979 60.5587 134.645 60.1767C135.31 59.7947 136.068 59.6037 136.918 59.6037C137.83 59.6037 138.65 59.8193 139.377 60.2506C140.104 60.682 140.677 61.2919 141.096 62.0806C141.515 62.857 141.724 63.7628 141.724 64.7979C141.724 65.8207 141.515 66.7327 141.096 67.5337C140.677 68.3347 140.098 68.957 139.358 69.4006C138.631 69.8443 137.818 70.0661 136.918 70.0661C136.043 70.0661 135.273 69.8751 134.608 69.4931C133.955 69.111 133.462 68.6243 133.129 68.0328V69.8997H131.447V56.2209H133.129V61.6555ZM140.005 64.7979C140.005 64.0339 139.851 63.3684 139.543 62.8015C139.235 62.2347 138.816 61.8034 138.286 61.5076C137.769 61.2119 137.196 61.064 136.567 61.064C135.951 61.064 135.378 61.218 134.848 61.5261C134.33 61.8218 133.911 62.2593 133.591 62.8385C133.283 63.4054 133.129 64.0647 133.129 64.8164C133.129 65.5804 133.283 66.252 133.591 66.8312C133.911 67.3981 134.33 67.8356 134.848 68.1437C135.378 68.4394 135.951 68.5873 136.567 68.5873C137.196 68.5873 137.769 68.4394 138.286 68.1437C138.816 67.8356 139.235 67.3981 139.543 66.8312C139.851 66.252 140.005 65.5743 140.005 64.7979Z"/>
+      <path d="M128.608 59.7698V69.8995H126.926V68.4022C126.606 68.9198 126.156 69.3264 125.577 69.6222C125.01 69.9056 124.381 70.0473 123.691 70.0473C122.903 70.0473 122.194 69.8871 121.566 69.5667C120.937 69.234 120.438 68.7411 120.068 68.088C119.711 67.4348 119.532 66.64 119.532 65.7034V59.7698H121.196V65.4816C121.196 66.4798 121.448 67.25 121.954 67.7922C122.459 68.3221 123.149 68.587 124.024 68.587C124.924 68.587 125.632 68.3098 126.15 67.7552C126.667 67.2007 126.926 66.3935 126.926 65.3337V59.7698H128.608Z"/>
+      <path d="M112.827 59.5852C113.591 59.5852 114.281 59.7516 114.898 60.0843C115.514 60.4047 115.994 60.8914 116.339 61.5446C116.697 62.1977 116.875 62.9926 116.875 63.9291V69.8997H115.212V64.1694C115.212 63.1589 114.959 62.3887 114.454 61.8588C113.949 61.3166 113.259 61.0455 112.384 61.0455C111.496 61.0455 110.788 61.3228 110.258 61.8773C109.74 62.4319 109.481 63.239 109.481 64.2988V69.8997H107.799V56.2209H109.481V61.2119C109.814 60.6943 110.27 60.2938 110.849 60.0103C111.441 59.7269 112.1 59.5852 112.827 59.5852Z"/>
+      <path d="M100.651 64.4465C100.651 64.7669 100.633 65.1058 100.596 65.4632H92.4994C92.561 66.4614 92.8999 67.2439 93.516 67.8108C94.1445 68.3653 94.9024 68.6426 95.7897 68.6426C96.5167 68.6426 97.1206 68.4762 97.6012 68.1435C98.0941 67.7985 98.4392 67.3425 98.6363 66.7756H100.448C100.177 67.7492 99.6345 68.544 98.8212 69.1602C98.0078 69.764 96.9973 70.0659 95.7897 70.0659C94.8285 70.0659 93.9658 69.8503 93.2018 69.419C92.4501 68.9876 91.8586 68.3777 91.4272 67.589C90.9959 66.788 90.7803 65.8637 90.7803 64.8162C90.7803 63.7688 90.9898 62.8507 91.4088 62.062C91.8278 61.2733 92.4131 60.6695 93.1648 60.2505C93.9289 59.8192 94.8038 59.6035 95.7897 59.6035C96.7509 59.6035 97.6012 59.813 98.3406 60.232C99.08 60.651 99.6468 61.2302 100.041 61.9696C100.448 62.6966 100.651 63.5223 100.651 64.4465ZM98.9136 64.0953C98.9136 63.4545 98.7719 62.9061 98.4884 62.4502C98.205 61.9819 97.8168 61.6307 97.3239 61.3965C96.8433 61.1501 96.3072 61.0268 95.7157 61.0268C94.8654 61.0268 94.1384 61.298 93.5345 61.8402C92.943 62.3824 92.6041 63.1341 92.5178 64.0953H98.9136Z"/>
+      <path d="M86.1948 61.4151C86.4906 60.8359 86.9096 60.3861 87.4518 60.0657C88.0063 59.7453 88.6779 59.5851 89.4666 59.5851V61.3227H89.023C87.1375 61.3227 86.1948 62.3455 86.1948 64.3911V69.8996H84.5127V59.7699H86.1948V61.4151Z"/>
+      <path d="M81.6737 59.7698V69.8995H79.9916V68.4022C79.6712 68.9198 79.2214 69.3264 78.6422 69.6222C78.0753 69.9056 77.4468 70.0473 76.7567 70.0473C75.9681 70.0473 75.2595 69.8871 74.631 69.5667C74.0025 69.234 73.5034 68.7411 73.1337 68.088C72.7763 67.4348 72.5977 66.64 72.5977 65.7034V59.7698H74.2613V65.4816C74.2613 66.4798 74.5139 67.25 75.0192 67.7922C75.5244 68.3221 76.2145 68.587 77.0895 68.587C77.9891 68.587 78.6976 68.3098 79.2152 67.7552C79.7328 67.2007 79.9916 66.3935 79.9916 65.3337V59.7698H81.6737Z"/>
+      <path d="M68.0092 61.1561V67.1267C68.0092 67.6197 68.1139 67.9709 68.3234 68.1804C68.5329 68.3775 68.8965 68.4761 69.414 68.4761H70.6525V69.8995H69.1368C68.2002 69.8995 67.4978 69.6838 67.0295 69.2525C66.5612 68.8212 66.3271 68.1126 66.3271 67.1267V61.1561H65.0146V59.7698H66.3271V57.2189H68.0092V59.7698H70.6525V61.1561H68.0092Z"/>
+      <path d="M59.0668 59.5851C60.2991 59.5851 61.2973 59.9609 62.0613 60.7127C62.8254 61.4521 63.2074 62.5242 63.2074 63.929V69.8996H61.5438V64.1693C61.5438 63.1588 61.2911 62.3886 60.7859 61.8587C60.2806 61.3165 59.5905 61.0454 58.7156 61.0454C57.8283 61.0454 57.1197 61.3227 56.5898 61.8772C56.0723 62.4317 55.8135 63.2389 55.8135 64.2987V69.8996H54.1313V59.7699H55.8135V61.2117C56.1462 60.6942 56.596 60.2937 57.1629 60.0102C57.742 59.7268 58.3767 59.5851 59.0668 59.5851Z"/>
+      <path d="M51.9104 64.4465C51.9104 64.7669 51.892 65.1058 51.855 65.4632H43.7586C43.8203 66.4614 44.1591 67.2439 44.7753 67.8108C45.4038 68.3653 46.1617 68.6426 47.0489 68.6426C47.776 68.6426 48.3798 68.4762 48.8604 68.1435C49.3534 67.7985 49.6984 67.3425 49.8956 66.7756H51.7071C51.436 67.7492 50.8938 68.544 50.0805 69.1602C49.2671 69.764 48.2566 70.0659 47.0489 70.0659C46.0877 70.0659 45.2251 69.8503 44.4611 69.419C43.7094 68.9876 43.1178 68.3777 42.6865 67.589C42.2552 66.788 42.0396 65.8637 42.0396 64.8162C42.0396 63.7688 42.2491 62.8507 42.668 62.062C43.087 61.2733 43.6724 60.6695 44.4241 60.2505C45.1881 59.8192 46.0631 59.6035 47.0489 59.6035C48.0102 59.6035 48.8605 59.813 49.5998 60.232C50.3392 60.651 50.9061 61.2302 51.3005 61.9696C51.7071 62.6966 51.9104 63.5223 51.9104 64.4465ZM50.1729 64.0953C50.1729 63.4545 50.0312 62.9061 49.7477 62.4502C49.4643 61.9819 49.0761 61.6307 48.5832 61.3965C48.1026 61.1501 47.5665 61.0268 46.975 61.0268C46.1247 61.0268 45.3976 61.298 44.7938 61.8402C44.2023 62.3824 43.8634 63.1341 43.7771 64.0953H50.1729Z"/>
+      <path d="M36.0813 68.3467L39.2237 59.7698H41.0168L37.0425 69.8995H35.0831L31.1089 59.7698H32.9204L36.0813 68.3467Z"/>
+      <path d="M19.189 64.7979C19.189 63.7628 19.3985 62.857 19.8175 62.0806C20.2364 61.2919 20.8095 60.682 21.5365 60.2506C22.2759 59.8193 23.1016 59.6037 24.0135 59.6037C24.8022 59.6037 25.5354 59.7885 26.2132 60.1582C26.891 60.5156 27.4086 60.99 27.7659 61.5815V56.2209H29.4665V69.8997H27.7659V67.9958C27.4332 68.5996 26.9403 69.0987 26.2871 69.4931C25.634 69.8751 24.87 70.0661 23.995 70.0661C23.0954 70.0661 22.2759 69.8443 21.5365 69.4006C20.8095 68.957 20.2364 68.3347 19.8175 67.5337C19.3985 66.7327 19.189 65.8207 19.189 64.7979ZM27.7659 64.8164C27.7659 64.0524 27.6119 63.3869 27.3038 62.82C26.9957 62.2532 26.5767 61.8218 26.0468 61.5261C25.5293 61.218 24.9562 61.064 24.3278 61.064C23.6993 61.064 23.1262 61.2119 22.6087 61.5076C22.0911 61.8034 21.6783 62.2347 21.3702 62.8015C21.0621 63.3684 20.9081 64.0339 20.9081 64.7979C20.9081 65.5743 21.0621 66.252 21.3702 66.8312C21.6783 67.3981 22.0911 67.8356 22.6087 68.1437C23.1262 68.4394 23.6993 68.5873 24.3278 68.5873C24.9562 68.5873 25.5293 68.4394 26.0468 68.1437C26.5767 67.8356 26.9957 67.3981 27.3038 66.8312C27.6119 66.252 27.7659 65.5804 27.7659 64.8164Z"/>
+      <path d="M6.69629 64.7978C6.69629 63.7626 6.90578 62.8568 7.32477 62.0805C7.74376 61.2918 8.31679 60.6818 9.04386 60.2505C9.78325 59.8192 10.6027 59.6035 11.5023 59.6035C12.3896 59.6035 13.1598 59.7945 13.8129 60.1765C14.4661 60.5586 14.9528 61.0392 15.2732 61.6184V59.7699H16.9739V69.8996H15.2732V68.0141C14.9405 68.6056 14.4414 69.0986 13.776 69.4929C13.1228 69.8749 12.3588 70.0659 11.4839 70.0659C10.5843 70.0659 9.77093 69.8441 9.04386 69.4005C8.31679 68.9568 7.74376 68.3345 7.32477 67.5335C6.90578 66.7325 6.69629 65.8206 6.69629 64.7978ZM15.2732 64.8162C15.2732 64.0522 15.1192 63.3867 14.8111 62.8199C14.503 62.253 14.0841 61.8217 13.5542 61.5259C13.0366 61.2179 12.4636 61.0638 11.8351 61.0638C11.2066 61.0638 10.6336 61.2117 10.116 61.5075C9.59841 61.8032 9.18558 62.2345 8.8775 62.8014C8.56942 63.3683 8.41538 64.0337 8.41538 64.7978C8.41538 65.5741 8.56942 66.2519 8.8775 66.8311C9.18558 67.398 9.59841 67.8354 10.116 68.1435C10.6336 68.4393 11.2066 68.5871 11.8351 68.5871C12.4636 68.5871 13.0366 68.4393 13.5542 68.1435C14.0841 67.8354 14.503 67.398 14.8111 66.8311C15.1192 66.2519 15.2732 65.5803 15.2732 64.8162Z"/>
+      <path d="M157.152 60.9583H150.756V54.2962H157.152C160.083 54.2962 161.682 53.2303 162.349 51.3649L163.748 47.6341H162.282L148.292 12.325H156.752L166.879 39.1066L176.805 12.325H185L169.61 53.6966C167.812 58.4267 164.081 60.9583 157.152 60.9583Z"/>
+      <path d="M132.82 48.6334C123.16 48.6334 117.43 44.1032 116.964 36.3752H124.559C124.825 40.1726 128.09 42.1712 132.42 42.1712C136.417 42.1712 138.549 40.6389 138.549 37.9075C138.549 35.176 136.284 34.643 133.219 33.6437L128.556 32.1114C122.693 30.1794 117.63 28.1808 117.63 21.6519C117.63 15.3895 122.427 11.259 130.888 11.259C139.082 11.259 144.678 15.5894 145.611 23.5839H138.149C137.75 19.5867 134.885 17.7213 130.821 17.7213C127.357 17.7213 125.358 19.1869 125.358 21.5853C125.358 24.3168 128.423 25.0496 130.954 25.9157L135.218 27.3147C142.213 29.6464 146.41 31.7783 146.41 38.1073C146.41 44.6362 141.48 48.6334 132.82 48.6334Z"/>
+      <path d="M112.342 47.6341H107.811C100.15 47.6341 96.0195 43.8367 96.0195 36.8414V18.987H89.8237V12.3249H96.0195V0.266479H103.881V12.3249H113.008V18.987H103.881V36.3085C103.881 39.3064 105.413 40.972 108.344 40.972H112.342V47.6341Z"/>
+      <path d="M65.9714 48.6334C57.5772 48.6334 52.7139 43.3704 52.7139 35.709V12.325H60.5751V35.3758C60.5751 39.3731 63.3732 41.7048 67.5703 41.7048C72.9666 41.7048 76.1645 38.1739 76.2311 33.6437V12.325H84.0924V47.6341H77.7634L77.1638 42.5043C75.0985 46.3017 70.9014 48.6334 65.9714 48.6334Z"/>
+      <path d="M23.2508 48.6334C9.46021 48.6334 0 39.0399 0 24.1834C0 10.0598 8.92724 0 23.2508 0C37.108 0 46.6348 9.52681 46.6348 24.1834C46.6348 38.4404 37.6409 48.6334 23.2508 48.6334ZM23.2508 41.3717C32.5777 41.3717 38.507 34.7096 38.507 24.1834C38.507 13.7906 32.5777 7.19507 23.2508 7.19507C13.9904 7.19507 8.1278 13.7906 8.1278 24.1834C8.1278 34.7096 13.9904 41.3717 23.2508 41.3717Z"/>
+      </g>
+    </symbol>
   </defs>
 </svg>
 <div class="app">
-  <div id="bubbles"></div>
 
   <!-- ===================== LOGIN SCREEN ===================== -->
   <section id="login" class="login-screen active">
     <div class="login-title">
-      <div class="h-adv">Adventure</div>
-      <div class="h-hub">HUB</div>
+      <svg class="brand-mark" viewBox="0 0 184 184" aria-label="Outsy"><use href="#sygnetSym"/></svg>
+      <svg class="wordmark" viewBox="0 0 185 71" aria-label="Outsy adventure hub"><use href="#wordmarkSym"/></svg>
     </div>
     <div class="login-form">
       <div class="login-sub">Zaloguj się, aby zobaczyć wspólną listę przygód</div>
@@ -452,9 +553,8 @@
     </button>
 
     <div class="hero-center">
-      <div class="h-adv">Adventure</div>
-      <div class="h-hub">HUB</div>
-      <div class="h-sub">for Kasia i Michał</div>
+      <svg class="brand-mark" viewBox="0 0 184 184" aria-label="Outsy"><use href="#sygnetSym"/></svg>
+      <svg class="wordmark" viewBox="0 0 185 71" aria-label="Outsy adventure hub"><use href="#wordmarkSym"/></svg>
     </div>
 
     <div class="start-btn-wrap">
@@ -464,24 +564,14 @@
 
   <!-- ===================== LIST SCREEN ===================== -->
   <section id="list" class="screen">
-    <div class="list-top">
-      <button class="gear" onclick="toggleOptions()" aria-label="Opcje">
-        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round">
-          <line x1="4" y1="7"  x2="20" y2="7"  stroke="rgba(38,43,58,.6)" stroke-width="2"/>
-          <line x1="4" y1="14" x2="20" y2="14" stroke="rgba(38,43,58,.6)" stroke-width="2"/>
-          <line x1="4" y1="21" x2="20" y2="21" stroke="rgba(38,43,58,.6)" stroke-width="2"/>
-          <circle cx="9"  cy="7"  r="3" fill="#2a2f3d"/>
-          <circle cx="15" cy="14" r="3" fill="#2a2f3d"/>
-          <circle cx="8"  cy="21" r="3" fill="#2a2f3d"/>
-        </svg>
-      </button>
-      <div class="discover-btn" onclick="toggleDiscover()">
-        <span class="disc-ic">
-          <svg class="ic-search" viewBox="0 0 24 24" fill="none" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
-          <svg class="ic-close" viewBox="0 0 24 24" fill="none" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
-        </span>
-        <span class="disc-label">Discover</span>
-      </div>
+    <div class="list-logo">
+      <svg class="sygnet-sm" viewBox="0 0 184 184" aria-hidden="true"><use href="#sygnetSym"/></svg>
+      <svg class="wordmark-sm" viewBox="0 0 185 71" aria-label="Outsy adventure hub"><use href="#wordmarkSym"/></svg>
+    </div>
+    <div class="cat-seg view-seg" id="viewSeg" data-active="0">
+      <div class="cat-thumb glass"></div>
+      <button class="cat-opt active" data-view="current" onclick="switchView('current')">Aktualne</button>
+      <button class="cat-opt" data-view="archive" onclick="switchView('archive')">Archiwum</button>
     </div>
     <div class="cat-seg" id="catTabs" data-active="0">
       <div class="cat-thumb glass"></div>
@@ -503,6 +593,9 @@
     </div>
     <div id="discover" class="discover-view">
       <div class="search-row">
+        <button class="disc-close" onclick="toggleDiscover()" aria-label="Zamknij mapę">
+          <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
+        </button>
         <input id="placeSearch" class="place-search" type="text" placeholder="Szukaj miejsca po nazwie…" autocomplete="off">
         <button class="search-go" onclick="runTextSearch()" aria-label="Szukaj na mapie">
           <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
@@ -554,6 +647,13 @@
           <div class="swatch" data-theme="cyan" style="background:#12B5C9" onclick="pickTheme(this,'cyan')"></div>
         </div>
       </div>
+      <div>
+        <div class="opt-label">Styl</div>
+        <div class="style-opts">
+          <button class="style-opt sel" data-style="glass" onclick="pickStyle(this,'glass')">Glass</button>
+          <button class="style-opt" data-style="flat" onclick="pickStyle(this,'flat')">Flat</button>
+        </div>
+      </div>
     </div>
     <button class="save-opt" onclick="saveOptions()">Save</button>
     <button class="logout-opt" onclick="doLogout()">Wyloguj</button>
@@ -572,8 +672,10 @@ var THEMES = {           // light theme: value = RGB of the subtle background gl
 var state = {
   theme:'magenta',
   user:'kasia',           // active perspective
+  style:'glass',          // 'glass' | 'flat'
   pendingTheme:'magenta',
-  pendingUser:'kasia'
+  pendingUser:'kasia',
+  pendingStyle:'glass'
 };
 var activities = [];   // populated from Firestore after login
 
@@ -591,7 +693,12 @@ function seed(){
 function id(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function load(){ try{ return JSON.parse(localStorage.getItem('advhub.v2')); }catch(e){ return null; } }
 function save(){ if(docRef){ docRef.set({activities: activities}).catch(function(){}); } }
-function saveSettings(){ localStorage.setItem('advhub.set', JSON.stringify({theme:state.theme,user:state.user})); }
+function saveSettings(){ localStorage.setItem('advhub.set', JSON.stringify({theme:state.theme,user:state.user,style:state.style})); }
+function applyStyle(s){ document.body.classList.toggle('flat', s==='flat'); }
+function pickStyle(el,s){
+  var o=document.querySelectorAll('.style-opt'); for(var i=0;i<o.length;i++) o[i].classList.remove('sel');
+  el.classList.add('sel'); state.pendingStyle=s; applyStyle(s);   // live preview
+}
 function loadSettings(){ try{ return JSON.parse(localStorage.getItem('advhub.set')); }catch(e){ return null; } }
 
 /* ===================== THEME ===================== */
@@ -621,7 +728,8 @@ function pickUser(el,name){
 }
 function saveOptions(){
   state.theme=state.pendingTheme;               // user identity comes from login, not editable here
-  applyTheme(state.theme); saveSettings();
+  state.style=state.pendingStyle;
+  applyTheme(state.theme); applyStyle(state.style); saveSettings();
   document.getElementById('options').classList.remove('open');
 }
 function updateUserBadge(){
@@ -644,6 +752,34 @@ function starSVG(on, cls){
   return '<svg class="star'+(on?' on':'')+(cls?' '+cls:'')+'" viewBox="0 0 24 24">'+STAR_SVG+'</svg>';
 }
 var currentCat='activity';
+var viewMode='current';   // 'current' (Aktualności) | 'archive' (Archiwum)
+function switchView(v){
+  if(v===viewMode) return;
+  viewMode=v;
+  document.body.classList.toggle('dark', v==='archive');   // ciemny motyw w Archiwum
+  var mt=document.querySelector('meta[name=theme-color]'); if(mt) mt.setAttribute('content', v==='archive'?'#0f1218':'#f7f7fa');
+  document.getElementById('viewSeg').setAttribute('data-active', v==='archive'?1:0);
+  var t=document.querySelectorAll('#viewSeg .cat-opt');
+  for(var i=0;i<t.length;i++) t[i].classList.toggle('active', t[i].dataset.view===v);
+  render();
+  var c=document.getElementById('listScroll'); if(!c) return;
+  var dir=(v==='archive')?1:-1;
+  c.style.transition='none'; c.style.transform='translateX('+(dir*40)+'px)'; c.style.opacity='0';
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){
+    c.style.transition='transform .35s cubic-bezier(.22,1,.36,1), opacity .3s ease';
+    c.style.transform='translateX(0)'; c.style.opacity='1';
+  });});
+  setTimeout(function(){ c.style.transition=''; c.style.transform=''; c.style.opacity=''; }, 380);
+}
+function toggleArchive(idv){
+  var a=find(idv); if(!a) return;
+  var msg = a.archived ? 'Przywrócić do Aktualnych? Oceny i komentarze zostaną wyzerowane — dodajecie je od nowa.'
+                       : 'Przenieść do Archiwum? Oceny i komentarze zostaną wyzerowane — w Archiwum dodajecie je od nowa.';
+  if(!confirm(msg)) return;
+  a.k=null; a.m=null; a.comments=[];        // przy przenoszeniu (w obie strony) oceny i komentarze od nowa
+  a.archived=!a.archived;
+  save(); flipRender();
+}
 function switchCat(cat){
   if(cat===currentCat) return;
   var order={activity:0,food:1,vacation:2};
@@ -662,8 +798,10 @@ function switchCat(cat){
   setTimeout(function(){ c.style.transition=''; c.style.transform=''; c.style.opacity=''; }, 380);
 }
 function render(){
-  var sorted = activities.filter(function(a){ return (a.category||'activity')===currentCat; })
+  var arch=(viewMode==='archive');
+  var sorted = activities.filter(function(a){ return (a.category||'activity')===currentCat && (!!a.archived===arch); })
                          .sort(function(a,b){ return avg(b)-avg(a); });
+  var ba=document.querySelector('.bottom-actions'); if(ba) ba.style.display = arch?'none':'';
   var html='<div id="aura"></div>';
   sorted.forEach(function(a){ html += card(a); });
   document.getElementById('cards').innerHTML = html;
@@ -737,6 +875,15 @@ function card(a){
   var rightCell = (myVal!=null)
     ? '<div class="box-ghost" onclick="openRateActive(\''+a.id+'\')"><span class="lbl">śr.</span><span class="num">'+avgDisp+'</span></div>'
     : '<button class="rate-cta" onclick="openRateActive(\''+a.id+'\')">Oceń!</button>';
+  var actionsHtml = a.archived
+    ? '<div class="desc-actions"><div class="act-btns">'+
+        '<button class="btn-edit" onclick="toggleArchive(\''+a.id+'\')">↩ Przywróć</button>'+
+      '</div></div>'
+    : '<div class="desc-actions"><div class="act-btns">'+
+        '<button class="btn-edit" onclick="editActivity(\''+a.id+'\')">Edit</button>'+
+        '<button class="btn-edit" onclick="cloneActivity(\''+a.id+'\')">Clone</button>'+
+        '<button class="btn-edit" onclick="toggleArchive(\''+a.id+'\')">Archive</button>'+
+      '</div></div>';
   return ''+
   '<div class="card glass" id="card-'+a.id+'">'+
     '<div class="card-row">'+
@@ -753,15 +900,11 @@ function card(a){
         '<div class="author-tag">Dodał(a): <span class="cmt-who '+auCls+'">'+auName+'</span></div>'+
         '<div class="desc-text">'+a.desc+'</div>'+
         commentsHTML(a)+
-        '<div class="desc-actions">'+
-          '<div class="act-btns">'+
-            '<button class="btn-edit" onclick="editActivity(\''+a.id+'\')">Edit</button>'+
-            '<button class="btn-edit" onclick="cloneActivity(\''+a.id+'\')">Clone</button>'+
-          '</div>'+
-        '</div>'+
+        actionsHtml+
       '</div></div>'+
       /* slide 1: rating */
       '<div class="slide"><div class="exp-pad">'+
+        '<div class="rate-title">Ocena aktywności</div>'+
         '<div class="rate-block">'+
           '<div class="rate-who-label">Ocena: <span id="ratewho-'+a.id+'"></span></div>'+
           '<div class="rate-stars" id="ratestars-'+a.id+'">'+ratingRow+'</div>'+
@@ -1031,8 +1174,9 @@ function setupGyro(){
 }
 var bubblesRunning=false;
 function startBubbles(){
-  if(bubbleState){ resumeBubbles(); return; }   // already built -> just ensure it's running
   var host=document.getElementById('bubbles');
+  if(!host) return;                              // bubbles removed
+  if(bubbleState){ resumeBubbles(); return; }   // already built -> just ensure it's running
   var W=host.clientWidth||390, H=host.clientHeight||844;
   var defs=[58,72,46,90,64,80,52];
   var balls=[];
@@ -1128,7 +1272,7 @@ var db=null, auth=null, docRef=null, unsub=null;
 var PREVIEW = !/github\.io$/i.test(location.hostname);
 function sig(arr){   // stable signature (ignores object key order) to detect real changes
   return JSON.stringify((arr||[]).map(function(a){
-    return [a.id,a.name,a.desc,a.k,a.m,(a.comments||[]).map(function(c){return [c.who,c.text,c.ts||''];})];
+    return [a.id,a.name,a.desc,a.k,a.m,a.category||'',a.archived?1:0,(a.comments||[]).map(function(c){return [c.who,c.text,c.ts||''];})];
   }));
 }
 
@@ -1338,10 +1482,11 @@ function applyDiscoverTypes(){
 }
 function toggleDiscover(){
   discoverOn=!discoverOn;
+  document.getElementById('viewSeg').style.display = discoverOn?'none':'';
   document.getElementById('catTabs').style.display = discoverOn?'none':'';
   document.getElementById('listScroll').style.display = discoverOn?'none':'';
   document.getElementById('discover').style.display = discoverOn?'flex':'none';
-  document.querySelector('.discover-btn').classList.toggle('on', discoverOn);
+  var db=document.querySelector('.discover-btn'); if(db) db.classList.toggle('on', discoverOn);
   if(!discoverOn) closePanel();
   var inp=document.getElementById('placeSearch');
   if(inp) inp.placeholder = (currentCat==='vacation') ? 'Szukaj kraju, regionu lub miasta…'
@@ -1485,11 +1630,14 @@ function addFromMap(){
 /* ===================== INIT ===================== */
 (function init(){
   var s=loadSettings();
-  if(s){ state.theme=s.theme||'magenta'; state.user=s.user||'kasia'; state.pendingTheme=state.theme; state.pendingUser=state.user; }
+  if(s){ state.theme=s.theme||'magenta'; state.user=s.user||'kasia'; state.style=s.style||'glass';
+         state.pendingTheme=state.theme; state.pendingUser=state.user; state.pendingStyle=state.style; }
   if(!THEMES[state.theme]){ state.theme='magenta'; state.pendingTheme='magenta'; }   // guard against old saved themes
   applyTheme(state.theme);
+  applyStyle(state.style);
   // reflect selections in options UI
   document.querySelectorAll('.swatch').forEach(function(el){ el.classList.toggle('sel', el.dataset.theme===state.theme); });
+  document.querySelectorAll('.style-opt').forEach(function(el){ el.classList.toggle('sel', el.dataset.style===state.style); });
   document.querySelectorAll('.user').forEach(function(el){ el.classList.toggle('sel', el.dataset.user===state.user); });
   document.getElementById('startLabel').textContent = "Let's start "+(state.user==='kasia'?'Kasia':'Michał')+"!";
   updateUserBadge();
