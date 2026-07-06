@@ -458,6 +458,8 @@
   body.dark .pp-addr{color:rgba(234,236,243,.7);}
   body.dark .rate-block + .rate-block{border-top-color:rgba(255,255,255,.12);}
   body.dark .cat-seg{background:rgba(255,255,255,.08);}
+  body.dark .settings-btn line{stroke:rgba(255,255,255,.75);}
+  body.dark .settings-btn circle{fill:#fff;}
   body.dark .glass{box-shadow:inset 0 1px 1px rgba(255,255,255,.14), 0 10px 28px rgba(0,0,0,.40);}
   body.dark .card.open{box-shadow:inset 0 1px 1px rgba(255,255,255,.14), 0 18px 40px rgba(0,0,0,.5);}
 
@@ -642,16 +644,8 @@
       <div>
         <div class="opt-label">Wybierz kolor aplikacji</div>
         <div class="swatches">
-          <div class="swatch sel" data-theme="magenta" style="background:#E5439B" onclick="pickTheme(this,'magenta')"></div>
-          <div class="swatch" data-theme="green" style="background:#2FBF71" onclick="pickTheme(this,'green')"></div>
-          <div class="swatch" data-theme="cyan" style="background:#12B5C9" onclick="pickTheme(this,'cyan')"></div>
-        </div>
-      </div>
-      <div>
-        <div class="opt-label">Styl</div>
-        <div class="style-opts">
-          <button class="style-opt sel" data-style="glass" onclick="pickStyle(this,'glass')">Glass</button>
-          <button class="style-opt" data-style="flat" onclick="pickStyle(this,'flat')">Flat</button>
+          <div class="swatch sel" data-theme="pink" style="background:#FF4EAC" onclick="pickTheme(this,'pink')"></div>
+          <div class="swatch" data-theme="blue" style="background:#1E64CB" onclick="pickTheme(this,'blue')"></div>
         </div>
       </div>
     </div>
@@ -664,18 +658,15 @@
 <script>
 /* ===================== STATE ===================== */
 var STAR_SVG = '<path d="M12 2l2.95 5.98 6.6.96-4.77 4.65 1.13 6.57L12 17.02 6.09 20.16l1.13-6.57L2.45 8.94l6.6-.96z"/>';
-var THEMES = {           // light theme: value = RGB of the subtle background glow
-  magenta:{glow:'229,67,155'},
-  green:  {glow:'47,191,113'},
-  cyan:   {glow:'23,182,196'}
+var THEMES = {           // value = RGB of the accent / background glow
+  pink: {glow:'255,78,172'},
+  blue: {glow:'30,100,203'}
 };
 var state = {
-  theme:'magenta',
+  theme:'pink',
   user:'kasia',           // active perspective
-  style:'glass',          // 'glass' | 'flat'
-  pendingTheme:'magenta',
-  pendingUser:'kasia',
-  pendingStyle:'glass'
+  pendingTheme:'pink',
+  pendingUser:'kasia'
 };
 var activities = [];   // populated from Firestore after login
 
@@ -693,12 +684,7 @@ function seed(){
 function id(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function load(){ try{ return JSON.parse(localStorage.getItem('advhub.v2')); }catch(e){ return null; } }
 function save(){ if(docRef){ docRef.set({activities: activities}).catch(function(){}); } }
-function saveSettings(){ localStorage.setItem('advhub.set', JSON.stringify({theme:state.theme,user:state.user,style:state.style})); }
-function applyStyle(s){ document.body.classList.toggle('flat', s==='flat'); }
-function pickStyle(el,s){
-  var o=document.querySelectorAll('.style-opt'); for(var i=0;i<o.length;i++) o[i].classList.remove('sel');
-  el.classList.add('sel'); state.pendingStyle=s; applyStyle(s);   // live preview
-}
+function saveSettings(){ localStorage.setItem('advhub.set', JSON.stringify({theme:state.theme,user:state.user})); }
 function loadSettings(){ try{ return JSON.parse(localStorage.getItem('advhub.set')); }catch(e){ return null; } }
 
 /* ===================== THEME ===================== */
@@ -728,8 +714,7 @@ function pickUser(el,name){
 }
 function saveOptions(){
   state.theme=state.pendingTheme;               // user identity comes from login, not editable here
-  state.style=state.pendingStyle;
-  applyTheme(state.theme); applyStyle(state.style); saveSettings();
+  applyTheme(state.theme); saveSettings();
   document.getElementById('options').classList.remove('open');
 }
 function updateUserBadge(){
@@ -1630,14 +1615,13 @@ function addFromMap(){
 /* ===================== INIT ===================== */
 (function init(){
   var s=loadSettings();
-  if(s){ state.theme=s.theme||'magenta'; state.user=s.user||'kasia'; state.style=s.style||'glass';
-         state.pendingTheme=state.theme; state.pendingUser=state.user; state.pendingStyle=state.style; }
-  if(!THEMES[state.theme]){ state.theme='magenta'; state.pendingTheme='magenta'; }   // guard against old saved themes
+  if(s){ state.theme=s.theme||'pink'; state.user=s.user||'kasia';
+         state.pendingTheme=state.theme; state.pendingUser=state.user; }
+  if(!THEMES[state.theme]){ state.theme='pink'; state.pendingTheme='pink'; }   // guard against old saved themes
   applyTheme(state.theme);
-  applyStyle(state.style);
+  document.body.classList.remove('flat');
   // reflect selections in options UI
   document.querySelectorAll('.swatch').forEach(function(el){ el.classList.toggle('sel', el.dataset.theme===state.theme); });
-  document.querySelectorAll('.style-opt').forEach(function(el){ el.classList.toggle('sel', el.dataset.style===state.style); });
   document.querySelectorAll('.user').forEach(function(el){ el.classList.toggle('sel', el.dataset.user===state.user); });
   document.getElementById('startLabel').textContent = "Let's start "+(state.user==='kasia'?'Kasia':'Michał')+"!";
   updateUserBadge();
