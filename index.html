@@ -279,11 +279,12 @@
   .star-btn{display:flex;align-items:center;justify-content:center;cursor:pointer;height:76px;}
   .star{width:28px;height:28px;display:block;}
   .star path{fill:var(--star-off);transition:fill .15s;}
-  .star.on path{fill:var(--accent);}
-  .star.on.k path{fill:var(--star-kasia);}   /* Kasia = magenta */
-  .star.on.m path{fill:var(--star-michal);}  /* Michał = cyan */
-  .rate-stars.k .star.on path{fill:var(--star-kasia);}
-  .rate-stars.m .star.on path{fill:var(--star-michal);}
+  .star.on path{fill:rgb(var(--glow-rgb));}
+  .star.on.k path{fill:rgb(var(--glow-rgb));}   /* rating stars follow the chosen theme colour */
+  .star.on.m path{fill:rgb(var(--glow-rgb));}
+  .rate-stars.k .star.on path{fill:rgb(var(--glow-rgb));}
+  .rate-stars.m .star.on path{fill:rgb(var(--glow-rgb));}
+  .rate-stars .star.on path{fill:rgb(var(--glow-rgb));}
 
   /* expandable section: horizontal slider [desc] <-> [rate] */
   .exp{max-height:0;overflow:hidden;opacity:0;
@@ -725,7 +726,7 @@
     </div>
     <button class="save-opt" onclick="saveOptions()">Save</button>
     <button class="logout-opt" onclick="doLogout()">Wyloguj</button>
-    <div class="app-ver">Outsy · wersja 75</div>
+    <div class="app-ver">Outsy · wersja 76</div>
   </div>
 
 </div>
