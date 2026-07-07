@@ -261,10 +261,10 @@
   .row-right{display:flex;justify-content:flex-end;align-items:center;}
   .c-left{display:flex;align-items:center;gap:14px;min-width:0;}
   .plus-ic{
-    width:32px;height:32px;border:1.5px solid rgba(var(--glow-rgb),.35);border-radius:9px;flex:0 0 auto;
+    width:36px;height:36px;border:none;border-radius:9px;flex:0 0 auto;
     display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgb(var(--glow-rgb));
   }
-  .plus-ic svg{width:18px;height:18px;display:block;}
+  .plus-ic svg{width:24px;height:24px;display:block;}
   .plus-ic .v-line{transition:opacity .2s ease, transform .2s ease;transform-origin:center;}
   .card.minus .plus-ic .v-line{opacity:0;transform:rotate(90deg);}
   .c-name{font-size:13px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;}
@@ -442,6 +442,9 @@
   .ico-item svg{width:22px;height:22px;display:block;}
   .ico-item.sel{border-color:rgb(var(--glow-rgb));background:rgba(var(--glow-rgb),.14);color:rgb(var(--glow-rgb));}
   .ico-more{grid-column:1/-1;text-align:center;color:var(--faint);font-size:12px;padding:10px 0 4px;}
+  .ico-cat-title{grid-column:1/-1;font-size:12px;font-weight:600;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.05em;padding:14px 2px 4px;}
+  .ico-cat-title:first-child{padding-top:2px;}
   .f-label{font-size:13px;font-weight:500;color:var(--muted);margin:4px 0 10px;}
   .f-input{
     width:100%;font-family:inherit;font-size:20px;font-weight:600;color:var(--ink);
@@ -1194,39 +1197,46 @@ function cloneActivity(idv){
   renderFormIcon();
   showFormFrom(document.getElementById('card-'+idv));
 }
-/* ---- icon library picker ---- */
-var ALL_ICONS=null;
-function allIconNames(){
-  if(ALL_ICONS) return ALL_ICONS;
-  var out=[], seen={};
-  if(window.lucide){
-    Object.keys(lucide).forEach(function(k){
-      if(!/^[A-Z][A-Za-z0-9]*$/.test(k)) return;          // icon exports are PascalCase
-      if(k==='Icon') return;
-      var base=k.replace(/Icon$/,'');                       // drop alias suffix
-      var kebab=base.replace(/([a-z])([0-9])/g,'$1-$2')
-                    .replace(/([a-z0-9])([A-Z])/g,'$1-$2')
-                    .toLowerCase();
-      if(seen[kebab]) return; seen[kebab]=1; out.push(kebab);
-    });
-  }
-  out.sort();
-  ALL_ICONS=out; return out;
-}
+/* ---- icon library picker (curated Lucide sets, grouped like Lucide categories) ---- */
+var ICON_CATS=[
+  {name:'Travel', icons:['plane','plane-takeoff','plane-landing','luggage','backpack','briefcase','map','map-pin','map-pinned','compass','tent','tent-tree','hotel','bed-double','bed-single','ticket','ticket-check','camera','sailboat','ship','anchor','globe','earth','mountain','mountain-snow','sunrise','sunset','umbrella','palmtree','tree-palm','caravan','shell','binoculars','waypoints','milestone','flag','wallet']},
+  {name:'Transportation', icons:['car','car-front','car-taxi-front','bus','bus-front','train-front','train-track','tram-front','bike','truck','plane','ship','sailboat','ambulance','fuel','traffic-cone','parking-meter','rocket','ship-wheel','ferris-wheel','footprints','cable-car','caravan','fuel']},
+  {name:'Sustainability', icons:['leaf','leafy-green','recycle','sprout','tree-deciduous','tree-pine','trees','flower','flower-2','sun','wind','droplet','droplets','battery-charging','plug-zap','globe','earth','bike','trash-2','wheat','glass-water','sun-medium']},
+  {name:'Sports', icons:['dumbbell','bike','medal','trophy','award','target','volleyball','goal','flag-triangle-right','waves','mountain','tent','snowflake','footprints','activity','person-standing','timer','stopwatch','gamepad-2','swords']},
+  {name:'Science', icons:['flask-conical','flask-round','atom','microscope','telescope','dna','test-tube','test-tubes','brain','magnet','orbit','radiation','biohazard','thermometer','pipette','scan','sigma','calculator','ruler','glasses','lightbulb']},
+  {name:'Navigation & Places', icons:['map-pin','map-pinned','navigation','navigation-2','compass','locate','locate-fixed','milestone','signpost','signpost-big','building','building-2','hospital','hotel','church','landmark','store','school','factory','warehouse','home','house','tent','flag','route','map']},
+  {name:'Nature', icons:['leaf','trees','tree-pine','tree-deciduous','flower','flower-2','sprout','sun','moon','cloud','cloud-rain','cloud-snow','snowflake','droplet','wind','mountain','mountain-snow','waves','sunrise','sunset','rainbow','star','bird','bug','shell','tornado','flame']},
+  {name:'Gaming', icons:['gamepad','gamepad-2','dices','dice-1','dice-2','dice-3','dice-4','dice-5','dice-6','joystick','puzzle','trophy','sword','swords','shield','ghost','target','spade','club','diamond','heart','crown','castle']},
+  {name:'Food & beverage', icons:['utensils','utensils-crossed','coffee','wine','beer','martini','cup-soda','pizza','sandwich','salad','soup','egg','egg-fried','ice-cream-cone','ice-cream-bowl','cake','cake-slice','cookie','croissant','donut','apple','banana','cherry','grape','carrot','fish','drumstick','ham','milk','wheat','popcorn','candy','beef','hop']},
+  {name:'Animals', icons:['bird','bug','cat','dog','fish','rabbit','rat','snail','squirrel','turtle','worm','paw-print','egg','feather','shell','shrimp','dove']}
+];
 function renderIconGrid(q){
   var grid=document.getElementById('icoGrid'); if(!grid) return;
   q=(q||'').toLowerCase().trim();
-  var names=allIconNames();
-  var list=q ? names.filter(function(n){return n.indexOf(q)>=0;}) : names;
-  var cap=300, shown=list.slice(0,cap);
   var cur=formIcon || pickIcon({name:document.getElementById('fName').value,desc:document.getElementById('fDesc').value});
-  grid.innerHTML=shown.map(function(n){
-    return '<button type="button" class="ico-item'+(n===cur?' sel':'')+'" title="'+n+'" onclick="chooseIcon(\''+n+'\')"><i data-lucide="'+n+'"></i></button>';
-  }).join('') + (list.length>cap ? '<div class="ico-more">Pokazano '+cap+' z '+list.length+' — zawęź wyszukiwaniem</div>' : '');
+  var html='';
+  ICON_CATS.forEach(function(c){
+    var items = q ? c.icons.filter(function(n){return n.indexOf(q)>=0;}) : c.icons;
+    if(!items.length) return;
+    html += '<div class="ico-cat-title">'+c.name+'</div>';
+    html += items.map(function(n){
+      return '<button type="button" class="ico-item'+(n===cur?' sel':'')+'" title="'+n+'" onclick="chooseIcon(\''+n+'\')"><i data-lucide="'+n+'"></i></button>';
+    }).join('');
+  });
+  if(!html) html='<div class="ico-more">Brak ikon dla „'+q+'"</div>';
+  grid.innerHTML=html;
   if(window.lucide) lucide.createIcons();
-  /* drop any icon name that didn't resolve to an SVG (keeps the grid clean) */
-  var items=grid.querySelectorAll('.ico-item');
-  for(var i=0;i<items.length;i++){ if(!items[i].querySelector('svg')) items[i].style.display='none'; }
+  /* drop any icon that didn't resolve, and hide category headers left empty */
+  var kids=grid.children, curHead=null, cnt=0;
+  function finalize(){ if(curHead && cnt===0) curHead.style.display='none'; }
+  for(var i=0;i<kids.length;i++){
+    var el=kids[i];
+    if(el.classList.contains('ico-cat-title')){ finalize(); curHead=el; cnt=0; }
+    else if(el.classList.contains('ico-item')){
+      if(!el.querySelector('svg')) el.style.display='none'; else cnt++;
+    }
+  }
+  finalize();
 }
 function openIconPicker(){
   document.getElementById('icoSearch').value='';
