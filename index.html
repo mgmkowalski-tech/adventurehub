@@ -37,6 +37,8 @@
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;font-family:inherit;}
   html,body{height:100%;overscroll-behavior-y:contain;}
+  html{background:#eceef3;}
+  html:has(body.dark){background:#0f1218;}
   body{
     font-family:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
     color:var(--ink);overflow:hidden;
@@ -97,7 +99,7 @@
   .brand-name{font-family:'Poppins',sans-serif;font-size:52px;font-weight:800;letter-spacing:-1.5px;color:var(--ink);text-align:center;line-height:1;}
   .brand-sub{font-size:16px;font-weight:500;color:var(--muted);text-align:center;letter-spacing:.4px;margin-top:2px;}
   .wordmark{display:block;margin:0 auto;width:172px;height:66px;color:var(--ink);}
-  .wordmark-sm{width:86px;height:33px;flex:0 0 auto;color:var(--ink);}
+  .wordmark-sm{width:69px;height:26px;flex:0 0 auto;color:var(--ink);}
   .list-logo{display:flex;align-items:center;gap:10px;padding:16px 18px 2px;flex:0 0 auto;}
   .sygnet-sm{width:34px;height:34px;flex:0 0 auto;}
   .list-logo-txt .ln{font-size:20px;font-weight:800;color:var(--ink);line-height:1;letter-spacing:-.5px;}
@@ -1219,7 +1221,7 @@ var ICON_CATS=[
   {name:'Travel', icons:['plane','plane-takeoff','plane-landing','luggage','backpack','briefcase','map','map-pin','map-pinned','compass','tent','tent-tree','hotel','bed-double','bed-single','ticket','ticket-check','camera','sailboat','ship','anchor','globe','earth','mountain','mountain-snow','sunrise','sunset','umbrella','palmtree','tree-palm','caravan','shell','binoculars','waypoints','milestone','flag','wallet']},
   {name:'Transportation', icons:['car','car-front','car-taxi-front','bus','bus-front','train-front','train-track','tram-front','bike','truck','plane','ship','sailboat','ambulance','fuel','traffic-cone','parking-meter','rocket','ship-wheel','ferris-wheel','footprints','cable-car','caravan','fuel']},
   {name:'Sustainability', icons:['leaf','leafy-green','recycle','sprout','tree-deciduous','tree-pine','trees','flower','flower-2','sun','wind','droplet','droplets','battery-charging','plug-zap','globe','earth','bike','trash-2','wheat','glass-water','sun-medium']},
-  {name:'Sports', icons:['dumbbell','bike','medal','trophy','award','target','volleyball','goal','flag-triangle-right','waves','sailboat','mountain','tent','snowflake','footprints','activity','person-standing','timer','stopwatch','gamepad-2','swords']},
+  {name:'Sports', icons:['dumbbell','bike','medal','trophy','award','target','volleyball','goal','flag-triangle-right','waves','kayak','sailboat','mountain','tent','snowflake','footprints','activity','person-standing','timer','stopwatch','gamepad-2','swords']},
   {name:'Science', icons:['flask-conical','flask-round','atom','microscope','telescope','dna','test-tube','test-tubes','brain','magnet','orbit','radiation','biohazard','thermometer','pipette','scan','sigma','calculator','ruler','glasses','lightbulb']},
   {name:'Navigation & Places', icons:['map-pin','map-pinned','navigation','navigation-2','compass','locate','locate-fixed','milestone','signpost','signpost-big','building','building-2','hospital','hotel','church','landmark','store','school','factory','warehouse','home','house','tent','flag','route','map']},
   {name:'Nature', icons:['leaf','trees','tree-pine','tree-deciduous','flower','flower-2','sprout','sun','moon','cloud','cloud-rain','cloud-snow','snowflake','droplet','wind','mountain','mountain-snow','waves','sunrise','sunset','rainbow','star','bird','bug','shell','tornado','flame']},
