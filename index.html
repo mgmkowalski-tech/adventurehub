@@ -458,6 +458,17 @@
     background:var(--field);outline:none;resize:none;min-height:150px;margin-bottom:24px;
   }
   .f-area::placeholder{color:var(--faint);}
+  .f-link{
+    width:100%;font-family:inherit;font-size:14px;font-weight:400;color:var(--ink);
+    padding:14px 16px;border-radius:16px;border:1px solid var(--field-line);
+    background:var(--field);outline:none;margin-bottom:24px;
+  }
+  .f-link::placeholder{color:var(--faint);}
+  .map-open-btn{display:inline-flex;align-items:center;gap:8px;margin:2px 0 10px;
+    padding:11px 18px;border-radius:14px;background:rgb(var(--glow-rgb));color:#fff;
+    font-size:14px;font-weight:600;text-decoration:none;}
+  .map-open-btn svg{width:17px;height:17px;stroke:currentColor;}
+  .map-open-btn:active{transform:scale(.97);}
   .form-actions{display:flex;gap:12px;align-items:center;}
   .btn-save-form{
     border:none;cursor:pointer;color:var(--ink);font-family:inherit;font-size:16px;font-weight:600;
@@ -664,8 +675,10 @@
       </button>
       <div class="f-label">Nazwa aktywności</div>
       <input class="f-input" id="fName" type="text" placeholder="Nazwa" autocomplete="off" oninput="if(!formIcon)renderFormIcon()">
-      <div class="f-label">Opis lub link</div>
+      <div class="f-label">Opis</div>
       <textarea class="f-area" id="fDesc" placeholder="Opis..." oninput="if(!formIcon)renderFormIcon()"></textarea>
+      <div class="f-label">Link do Google Maps (opcjonalnie)</div>
+      <input class="f-link" id="fMap" type="text" placeholder="https://maps.google.com/…" autocomplete="off" inputmode="url">
       <div class="form-actions">
         <button class="btn-save-form" onclick="saveForm()">Save</button>
         <button class="btn-cancel" onclick="closeForm()">Anuluj</button>
@@ -968,6 +981,7 @@ function card(a){
       '<div class="slide"><div class="exp-pad">'+
         '<div class="author-tag">Dodał(a): <span class="cmt-who '+auCls+'">'+auName+'</span></div>'+
         '<div class="desc-text">'+a.desc+'</div>'+
+        (a.mapUrl ? '<a class="map-open-btn" href="'+esc(a.mapUrl)+'" target="_blank" rel="noopener"><i data-lucide="map-pin"></i>Otwórz mapę</a>' : '')+
         commentsHTML(a)+
         actionsHtml+
       '</div></div>'+
@@ -1175,6 +1189,7 @@ function openForm(){
   editId=null; formIcon=null;
   document.getElementById('fName').value='';
   document.getElementById('fDesc').value='';
+  document.getElementById('fMap').value='';
   document.getElementById('fDel').style.display='none';
   renderFormIcon();
   showFormFrom(document.querySelector('.add-card'));
@@ -1183,6 +1198,7 @@ function editActivity(idv){
   var a=find(idv); editId=idv; formIcon=a.icon||null;
   document.getElementById('fName').value=a.name;
   document.getElementById('fDesc').value = a.desc.replace(/<\/?b>/g,'');
+  document.getElementById('fMap').value = a.mapUrl||'';
   var canDel = (!a.author) || a.author===state.user || state.user==='michal';   // author, or Michał (admin) may delete
   document.getElementById('fDel').style.display = canDel ? 'block' : 'none';
   renderFormIcon();
@@ -1193,6 +1209,7 @@ function cloneActivity(idv){
   editId=null; formIcon=a.icon||null;            // new activity, not editing
   document.getElementById('fName').value=a.name;
   document.getElementById('fDesc').value=(a.desc||'').replace(/<\/?b>/g,'');
+  document.getElementById('fMap').value=a.mapUrl||'';
   document.getElementById('fDel').style.display='none';
   renderFormIcon();
   showFormFrom(document.getElementById('card-'+idv));
@@ -1253,13 +1270,16 @@ function closeForm(){ hideForm(); }
 function saveForm(){
   var name=document.getElementById('fName').value.trim();
   var desc=document.getElementById('fDesc').value.trim();
+  var mapUrl=document.getElementById('fMap').value.trim();
   if(!name){ document.getElementById('fName').focus(); return; }
   if(editId){
     var a=find(editId); a.name=name; a.desc=desc||a.desc;
     if(formIcon) a.icon=formIcon; else delete a.icon;   // null = back to auto
+    if(mapUrl) a.mapUrl=mapUrl; else delete a.mapUrl;
   }else{
     var na={id:id(), name:name, desc:desc||'Brak opisu.', k:null, m:null, author:state.user, category:currentCat, comments:[]};
     if(formIcon) na.icon=formIcon;
+    if(mapUrl) na.mapUrl=mapUrl;
     activities.push(na);
   }
   save(); closeForm(); flipRender();
@@ -1752,8 +1772,8 @@ function addFromMap(){
   if(!selectedPlace) return;
   editId=null; formIcon=null;
   document.getElementById('fName').value=selectedPlace.name;
-  var link='<a href="'+selectedPlace.url+'" target="_blank" rel="noopener">📍 Otwórz w Google Maps</a>';
-  document.getElementById('fDesc').value=(selectedPlace.descText? selectedPlace.descText+'\n\n':'')+link;
+  document.getElementById('fDesc').value=selectedPlace.descText||'';
+  document.getElementById('fMap').value=selectedPlace.url||'';
   document.getElementById('fDel').style.display='none';
   renderFormIcon();
   showFormFrom(document.querySelector('.discover-btn'));
