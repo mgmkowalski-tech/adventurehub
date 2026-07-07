@@ -179,7 +179,7 @@
   .place-search::placeholder{color:var(--faint);}
   .search-row .place-search{flex:1;margin-bottom:0;}
   .search-go{flex:0 0 auto;width:48px;border:none;cursor:pointer;border-radius:14px;
-    background:linear-gradient(135deg, rgba(var(--glow-rgb),1), rgba(var(--glow-rgb),.72));
+    background:rgb(var(--glow-rgb));
     display:flex;align-items:center;justify-content:center;}
   .search-go svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;}
   .search-go:active{transform:scale(.95);}
@@ -196,8 +196,8 @@
   #map{flex:1;min-height:220px;border-radius:20px;overflow:hidden;background:rgba(255,255,255,.4);}
   .map-label{ text-shadow:-1.2px -1.2px 0 #fff,1.2px -1.2px 0 #fff,-1.2px 1.2px 0 #fff,1.2px 1.2px 0 #fff,0 0 3px #fff; }
   .map-add-btn{display:none;margin-top:12px;width:100%;border:none;cursor:pointer;color:#fff;font-family:inherit;
-    font-size:16px;font-weight:700;padding:15px;border-radius:16px;
-    background:linear-gradient(120deg, rgba(var(--glow-rgb),1), rgba(var(--glow-rgb),.72));
+    font-size:16px;font-weight:600;padding:15px;border-radius:16px;
+    background:rgb(var(--glow-rgb));
     box-shadow:0 10px 24px rgba(var(--glow-rgb),.30);}
   .map-add-btn .p{font-size:19px;margin-right:4px;}
   .map-add-btn:active{transform:scale(.98);}
@@ -215,7 +215,7 @@
   .pp-photos{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin:6px 0 12px;-webkit-overflow-scrolling:touch;}
   .pp-photos:empty{display:none;}
   .pp-photo{height:130px;width:auto;border-radius:14px;flex:0 0 auto;object-fit:cover;background:#eee;}
-  .pp-name{font-size:19px;font-weight:800;color:var(--ink);line-height:1.15;}
+  .pp-name{font-size:19px;font-weight:600;color:var(--ink);line-height:1.15;}
   .pp-meta{font-size:13px;color:var(--muted);margin-top:4px;}
   .pp-addr{font-size:13px;color:rgba(38,43,58,.7);margin-top:6px;}
   .pp-actions{display:flex;gap:10px;margin-top:14px;}
@@ -394,7 +394,7 @@
   .add-row .p{font-size:20px;font-weight:700;}
   .bottom-actions{display:flex;gap:12px;margin-bottom:13px;}
   .bottom-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;min-height:76px;
-    cursor:pointer;border-radius:16px;font-family:inherit;font-size:18px;font-weight:600;color:var(--faint);
+    cursor:pointer;border-radius:16px;font-family:inherit;font-size:14px;font-weight:600;color:var(--faint);
     background:rgba(255,255,255,.30);border:1px dashed rgba(38,43,58,.20);
     backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:transform .12s, background .2s;}
   .bottom-btn:active{transform:scale(.98);background:rgba(255,255,255,.5);}
@@ -464,7 +464,7 @@
     background:var(--field);outline:none;margin-bottom:24px;
   }
   .f-link::placeholder{color:var(--faint);}
-  .map-open-btn{display:inline-flex;align-items:center;gap:8px;margin:2px 0 10px;
+  .map-open-btn{display:inline-flex;align-items:center;gap:8px;margin:10px 0;
     padding:11px 18px;border-radius:14px;background:rgb(var(--glow-rgb));color:#fff;
     font-size:14px;font-weight:600;text-decoration:none;}
   .map-open-btn svg{width:17px;height:17px;stroke:currentColor;}
@@ -661,7 +661,7 @@
       <div class="pp-addr" id="ppAddr"></div>
       <div class="pp-actions">
         <button class="map-view-btn" onclick="viewOnMaps()">Zobacz szczegóły</button>
-        <button class="map-add-btn" onclick="addFromMap()"><span class="p">+</span> Add an Adventure</button>
+        <button class="map-add-btn" onclick="addFromMap()"><span class="p">+</span> Add</button>
       </div>
     </div>
   </section>
@@ -1686,15 +1686,9 @@ function showPlaceById(placeId){
 function selectPlace(p){
   var loc=p.geometry.location, lat=loc.lat(), lng=loc.lng();
   var url = p.url || ('https://www.google.com/maps/search/?api=1&query='+lat+','+lng+(p.place_id?('&query_place_id='+p.place_id):''));
-  var lines=[];
-  if(p.editorial_summary && p.editorial_summary.overview) lines.push(p.editorial_summary.overview);
-  var meta=[];
-  if(p.rating) meta.push('⭐ '+p.rating+(p.user_ratings_total?(' ('+p.user_ratings_total+' opinii)'):''));
-  if(typeof p.price_level==='number') meta.push('💰'.repeat(Math.max(1,p.price_level+1)));
-  if(meta.length) lines.push(meta.join('   '));
-  if(p.formatted_address) lines.push(p.formatted_address);
-  if(p.website) lines.push('🌐 '+p.website);
-  selectedPlace={ name:p.name||'', descText:lines.join('\n'), lat:lat, lng:lng, placeId:p.place_id||'', url:url };
+  // description = only the actual place description (no address/rating/link clutter)
+  var descText = (p.editorial_summary && p.editorial_summary.overview) ? p.editorial_summary.overview : '';
+  selectedPlace={ name:p.name||'', descText:descText, lat:lat, lng:lng, placeId:p.place_id||'', url:url };
   if(gmarker) gmarker.setMap(null);
   gmarker=new google.maps.Marker({position:loc, map:gmap, animation:google.maps.Animation.DROP, icon:dotIcon(11)});
   // fill the Google-Maps-like panel
