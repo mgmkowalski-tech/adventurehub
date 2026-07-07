@@ -475,6 +475,17 @@
   .ico-cat-title{grid-column:1/-1;font-size:12px;font-weight:600;color:var(--muted);
     text-transform:uppercase;letter-spacing:.05em;padding:14px 2px 4px;}
   .ico-cat-title:first-child{padding-top:2px;}
+  /* backup restore list */
+  .bk-list{overflow-y:auto;max-height:60vh;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:8px;}
+  .bk-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;
+    background:var(--glass);border:1px solid var(--field-line);}
+  .bk-meta{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .bk-when{font-size:14px;font-weight:600;color:var(--ink);}
+  .bk-cnt{font-size:12px;color:var(--muted);margin-top:1px;}
+  .bk-restore{flex:0 0 auto;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;
+    color:#fff;background:rgb(var(--glow-rgb));padding:9px 14px;border-radius:11px;}
+  .bk-restore:active{transform:scale(.96);}
+  .bk-empty{font-size:13px;color:var(--faint);text-align:center;padding:24px 8px;line-height:1.5;}
   .f-label{font-size:13px;font-weight:500;color:var(--muted);margin:4px 0 10px;}
   .f-input{
     width:100%;font-family:inherit;font-size:20px;font-weight:600;color:var(--ink);
@@ -729,6 +740,17 @@
     </div>
   </div>
 
+  <!-- ===================== BACKUP RESTORE MODAL ===================== -->
+  <div id="backupModal" class="icopick" onclick="if(event.target.id==='backupModal')closeBackups()">
+    <div class="icopick-card">
+      <div class="icopick-head">
+        <div class="tt">Kopie zapasowe</div>
+        <button class="icopick-close" type="button" onclick="closeBackups()">×</button>
+      </div>
+      <div class="bk-list" id="backupList"></div>
+    </div>
+  </div>
+
   <!-- options panel (global — overlays any screen) -->
   <div class="options glass" id="options">
     <div class="opt-grid">
@@ -744,10 +766,15 @@
         <button class="notif-opt" id="notifBtn" onclick="enableNotifications()">Włącz powiadomienia</button>
         <div class="notif-hint">Powiadomią Cię, gdy druga osoba doda lub zarchiwizuje przygodę. Działają, gdy apka jest otwarta lub w tle.</div>
       </div>
+      <div>
+        <div class="opt-label">Kopie zapasowe</div>
+        <button class="notif-opt" onclick="openBackups()">Przywróć kopię</button>
+        <div class="notif-hint">Automatyczne kopie w chmurze (20 ostatnich). Gdyby coś się skasowało, przywrócisz stąd poprzednią wersję.</div>
+      </div>
     </div>
     <button class="save-opt" onclick="saveOptions()">Save</button>
     <button class="logout-opt" onclick="doLogout()">Wyloguj</button>
-    <div class="app-ver">Outsy · wersja 79</div>
+    <div class="app-ver">Outsy · wersja 82</div>
   </div>
 
   <!-- shows only if a write to the shared cloud DB fails -->
@@ -795,15 +822,75 @@ function seed(){
 function id(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function load(){ try{ return JSON.parse(localStorage.getItem('advhub.v2')); }catch(e){ return null; } }
 var dataLoaded=false;   // becomes true only after the cloud doc has actually been read
+var cloudSettings={};   // per-user preferences kept in the cloud (e.g. theme), survives cache-clear
+var themeApplied=false; // apply the saved theme from the cloud only once per session
 function showSyncErr(msg){ var t=document.getElementById('syncToast'); if(t){ t.textContent=msg||'⚠️ Nie udało się zapisać do wspólnej bazy'; t.classList.add('show'); } }
 function hideSyncErr(){ var t=document.getElementById('syncToast'); if(t) t.classList.remove('show'); }
 function save(){
   if(!docRef) return;
   if(!dataLoaded) return;                 // never overwrite the cloud before we've loaded it
-  docRef.set({activities: activities}).then(function(){ hideSyncErr(); }).catch(function(e){
+  docRef.set({activities: activities}, {merge:true}).then(function(){ hideSyncErr(); scheduleBackup(); }).catch(function(e){
     console.warn('Firestore save failed:', e && e.code, e && e.message);
     showSyncErr('⚠️ Zapis do wspólnej bazy nie działa ('+((e&&e.code)||'błąd')+')');
   });
+}
+
+/* ===================== CLOUD BACKUPS (rolling snapshots, restore anytime) ===================== */
+var BACKUP_KEEP=20, lastBackupSig=null, backupTimer=null;
+function backupCol(){ return docRef ? docRef.collection('backups') : null; }
+function scheduleBackup(){ clearTimeout(backupTimer); backupTimer=setTimeout(backupNow, 15000); }
+function backupNow(){
+  var col=backupCol();
+  if(!col || !dataLoaded) return;
+  if(!activities || activities.length===0) return;      // NEVER back up an empty/reset state
+  var s=sig(activities);
+  if(s===lastBackupSig) return;                          // nothing changed since the last backup
+  lastBackupSig=s;
+  var ts=Date.now();
+  col.doc(String(ts)).set({ts:ts, by:state.user, activities:activities}).then(function(){
+    col.orderBy('ts','desc').get().then(function(qs){
+      qs.docs.slice(BACKUP_KEEP).forEach(function(d){ d.ref.delete().catch(function(){}); });  // keep newest N
+    }).catch(function(){});
+  }).catch(function(){});
+}
+function openBackups(){
+  var o=document.getElementById('options'); if(o) o.classList.remove('open');
+  document.getElementById('backupModal').classList.add('active');
+  renderBackupList();
+}
+function closeBackups(){ document.getElementById('backupModal').classList.remove('active'); }
+function renderBackupList(){
+  var box=document.getElementById('backupList'); if(!box) return;
+  var col=backupCol();
+  if(!col){ box.innerHTML='<div class="bk-empty">Kopie działają tylko po zalogowaniu.</div>'; return; }
+  box.innerHTML='<div class="bk-empty">Ładowanie…</div>';
+  col.orderBy('ts','desc').limit(BACKUP_KEEP).get().then(function(qs){
+    if(qs.empty){ box.innerHTML='<div class="bk-empty">Nie ma jeszcze żadnych kopii. Powstaną automatycznie w miarę korzystania.</div>'; return; }
+    var html='';
+    qs.forEach(function(d){
+      var b=d.data(); var n=(b.activities||[]).length;
+      var dt=new Date(b.ts||Number(d.id));
+      var label=dt.toLocaleString('pl-PL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+      var who=b.by ? (b.by==='kasia'?'Kasia':'Michał') : '';
+      html+='<div class="bk-item"><div class="bk-meta"><span class="bk-when">'+label+'</span>'+
+            '<span class="bk-cnt">'+n+' aktyw.'+(who?(' · '+who):'')+'</span></div>'+
+            '<button class="bk-restore" onclick="restoreBackup(\''+d.id+'\')">Przywróć</button></div>';
+    });
+    box.innerHTML=html;
+  }).catch(function(){ box.innerHTML='<div class="bk-empty">Nie udało się pobrać kopii.</div>'; });
+}
+function restoreBackup(idv){
+  var col=backupCol(); if(!col) return;
+  col.doc(idv).get().then(function(d){
+    if(!d.exists) return;
+    var b=d.data(); var n=(b.activities||[]).length;
+    if(!confirm('Przywrócić kopię z '+n+' aktywnościami? Obecna lista zostanie nią zastąpiona (u obojga).')) return;
+    activities = b.activities || [];
+    lastBackupSig=null;                 // allow the restored state to be backed up again
+    save();
+    flipRender();
+    closeBackups();
+  }).catch(function(){});
 }
 function saveSettings(){ localStorage.setItem('advhub.set', JSON.stringify({theme:state.theme,user:state.user})); }
 function loadSettings(){ try{ return JSON.parse(localStorage.getItem('advhub.set')); }catch(e){ return null; } }
@@ -836,7 +923,20 @@ function pickUser(el,name){
 function saveOptions(){
   state.theme=state.pendingTheme;               // user identity comes from login, not editable here
   applyTheme(state.theme); saveSettings();
+  cloudSettings[state.user]={theme:state.theme};
+  saveSettingsCloud();                          // remember the colour in the cloud too
   document.getElementById('options').classList.remove('open');
+}
+function saveSettingsCloud(){
+  if(docRef && dataLoaded){ docRef.set({settings:cloudSettings},{merge:true}).catch(function(){}); }
+}
+function applyCloudTheme(){
+  var s=cloudSettings[state.user];
+  if(s && s.theme && THEMES[s.theme]){
+    state.theme=s.theme; state.pendingTheme=s.theme;
+    applyTheme(s.theme);
+    document.querySelectorAll('.swatch').forEach(function(el){ el.classList.toggle('sel', el.dataset.theme===s.theme); });
+  }
 }
 function updateUserBadge(){
   var b=document.getElementById('userBadge'); if(!b) return;
@@ -1571,12 +1671,15 @@ function onLoggedIn(){
   unsub=docRef.onSnapshot(function(snap){
     var fromCache = snap.metadata && snap.metadata.fromCache;
     if(!snap.exists){
-      // only seed a genuinely-missing space, confirmed by the server, and only once —
-      // never re-inject defaults over data we've already loaded
-      if(!fromCache && !dataLoaded){ docRef.set({activities: seed()}).catch(function(){}); dataLoaded=true; }
+      // NEVER auto-write sample data. A missing doc just means the space is empty;
+      // the first activity the user adds will create it. This makes it impossible for
+      // defaults to ever overwrite real data.
+      if(!fromCache) dataLoaded=true;   // server-confirmed empty space → saving is allowed
       return;
     }
     var incoming = snap.data().activities || [];
+    cloudSettings = snap.data().settings || cloudSettings;   // per-user prefs from the cloud
+    if(!themeApplied){ themeApplied=true; applyCloudTheme(); }
     dataLoaded = true;                             // the cloud doc has been read → saving is safe now
     if(sig(incoming) === sig(activities)) return;  // our own change / no change
     notifyChanges(activities, incoming);           // local push (variant B)
@@ -1912,6 +2015,9 @@ function addFromMap(){
 
 /* ---- ensure Lucide icons render once the library is ready ---- */
 window.addEventListener('load', function(){ if(window.lucide) lucide.createIcons(); });
+
+/* ---- periodic cloud backup (every 10 min while the app is open) ---- */
+setInterval(function(){ backupNow(); }, 10*60*1000);
 
 /* ---- PWA: register service worker (offline + installable + auto-update) ---- */
 if('serviceWorker' in navigator){
