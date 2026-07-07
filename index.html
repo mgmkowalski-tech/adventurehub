@@ -144,6 +144,11 @@
   .user.sel .ic{border-color:var(--ink);}
   .user .ic svg{width:18px;height:18px;}
   .user .nm{font-size:17px;font-weight:600;color:var(--ink);}
+  .notif-opt{border:none;cursor:pointer;color:var(--ink);font-family:inherit;font-size:13px;font-weight:600;
+    padding:9px 14px;border-radius:11px;background:var(--btn);}
+  .notif-opt:active{transform:scale(.97);}
+  .notif-opt.on{background:rgb(var(--glow-rgb));color:#fff;}
+  .notif-hint{font-size:11px;color:var(--faint);margin-top:8px;line-height:1.4;}
   .save-opt{
     margin-top:22px;display:inline-block;border:none;cursor:pointer;color:var(--ink);font-family:inherit;
     font-size:15px;font-weight:600;padding:11px 26px;border-radius:11px;
@@ -711,6 +716,11 @@
           <div class="swatch" data-theme="blue" style="background:#1E64CB" onclick="pickTheme(this,'blue')"></div>
         </div>
       </div>
+      <div>
+        <div class="opt-label">Powiadomienia</div>
+        <button class="notif-opt" id="notifBtn" onclick="enableNotifications()">Włącz powiadomienia</button>
+        <div class="notif-hint">Powiadomią Cię, gdy druga osoba doda lub zarchiwizuje przygodę. Działają, gdy apka jest otwarta lub w tle.</div>
+      </div>
     </div>
     <button class="save-opt" onclick="saveOptions()">Save</button>
     <button class="logout-opt" onclick="doLogout()">Wyloguj</button>
@@ -766,7 +776,7 @@ function go(scr){
 }
 
 /* ===================== OPTIONS ===================== */
-function toggleOptions(){ document.getElementById('options').classList.toggle('open'); }
+function toggleOptions(){ document.getElementById('options').classList.toggle('open'); refreshNotifBtn(); }
 function pickTheme(el,name){
   document.querySelectorAll('.swatch').forEach(function(s){ s.classList.remove('sel'); });
   el.classList.add('sel'); state.pendingTheme=name; applyTheme(name); /* live preview */
@@ -1431,6 +1441,54 @@ function sig(arr){   // stable signature (ignores object key order) to detect re
   }));
 }
 
+/* ===================== NOTIFICATIONS (variant B: local, no server) ===================== */
+var notifFirst=true;   // skip notifications on the very first snapshot after load
+function notifSupported(){ return ('Notification' in window) && ('serviceWorker' in navigator); }
+function refreshNotifBtn(){
+  var b=document.getElementById('notifBtn'); if(!b) return;
+  if(!notifSupported()){ b.textContent='Niedostępne na tym urządzeniu'; b.disabled=true; b.classList.remove('on'); return; }
+  if(Notification.permission==='granted'){ b.textContent='Powiadomienia włączone ✓'; b.classList.add('on'); }
+  else if(Notification.permission==='denied'){ b.textContent='Zablokowane w ustawieniach telefonu'; b.classList.remove('on'); }
+  else{ b.textContent='Włącz powiadomienia'; b.classList.remove('on'); }
+}
+function enableNotifications(){
+  if(!notifSupported()){ refreshNotifBtn(); return; }
+  if(Notification.permission==='granted'){ showLocalNotif('Outsy','Powiadomienia są już włączone 🎉'); return; }
+  if(Notification.permission==='denied'){ alert('Powiadomienia są zablokowane. Włącz je w ustawieniach telefonu dla tej aplikacji.'); return; }
+  Notification.requestPermission().then(function(p){
+    refreshNotifBtn();
+    if(p==='granted') showLocalNotif('Outsy','Gotowe! Damy znać, gdy pojawi się coś do oceny 🙌');
+  });
+}
+function showLocalNotif(title, body){
+  if(!notifSupported() || Notification.permission!=='granted') return;
+  var opts={ body:body, icon:'icon-192.png', badge:'icon-192.png', tag:'outsy-'+Date.now(), renotify:true };
+  if(navigator.serviceWorker && navigator.serviceWorker.ready){
+    navigator.serviceWorker.ready.then(function(reg){ reg.showNotification(title, opts); }).catch(function(){
+      try{ new Notification(title, opts); }catch(e){}
+    });
+  }else{ try{ new Notification(title, opts); }catch(e){} }
+}
+function otherName(){ return state.user==='kasia' ? 'Michał' : 'Kasia'; }
+function notifyChanges(prev, incoming){
+  if(notifFirst){ notifFirst=false; return; }          // don't fire on initial load
+  if(!notifSupported() || Notification.permission!=='granted') return;
+  var oldMap={}; (prev||[]).forEach(function(a){ oldMap[a.id]=a; });
+  var who=otherName();
+  incoming.forEach(function(a){
+    var o=oldMap[a.id];
+    if(!o){
+      // brand-new activity added by the other person
+      if(a.author && a.author!==state.user && !a.archived){
+        showLocalNotif('Nowa przygoda od '+who, '„'+a.name+'" czeka na Twoją ocenę — oceń ją! ✨');
+      }
+    }else if(!o.archived && a.archived){
+      // an existing activity was just archived
+      showLocalNotif('Przygoda w Archiwum', '„'+a.name+'" trafiła do Archiwum — oceń ją od nowa!');
+    }
+  });
+}
+
 function initFirebase(){
   if(PREVIEW){                                   // local/preview: no login, sample data
     activities = seed();
@@ -1466,6 +1524,7 @@ function onLoggedIn(){
     if(!snap.exists){ docRef.set({activities: seed()}).catch(function(){}); return; }
     var incoming = snap.data().activities || [];
     if(sig(incoming) === sig(activities)) return;  // our own change / no change
+    notifyChanges(activities, incoming);           // local push (variant B)
     activities = incoming;
     var chg=false; activities.forEach(function(a){ if(!a.author){ a.author=ra(); chg=true; } });
     if(chg) save();                        // one-time: assign authors to older activities
