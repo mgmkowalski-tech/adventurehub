@@ -17,6 +17,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
 <style>
   :root{
     --glow-rgb:229,67,155;             /* subtle background glow (magenta default) */
@@ -260,10 +261,10 @@
   .row-right{display:flex;justify-content:flex-end;align-items:center;}
   .c-left{display:flex;align-items:center;gap:14px;min-width:0;}
   .plus-ic{
-    width:28px;height:28px;border:2px solid var(--accent);border-radius:7px;flex:0 0 auto;
-    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    width:32px;height:32px;border:1.5px solid rgba(var(--glow-rgb),.35);border-radius:9px;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgb(var(--glow-rgb));
   }
-  .plus-ic svg{width:15px;height:15px;display:block;stroke:var(--accent);stroke-width:2.4;stroke-linecap:round;}
+  .plus-ic svg{width:18px;height:18px;display:block;}
   .plus-ic .v-line{transition:opacity .2s ease, transform .2s ease;transform-origin:center;}
   .card.minus .plus-ic .v-line{opacity:0;transform:rotate(90deg);}
   .c-name{font-size:13px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;}
@@ -790,6 +791,7 @@ function render(){
   var html='<div id="aura"></div>';
   sorted.forEach(function(a){ html += card(a); });
   document.getElementById('cards').innerHTML = html;
+  if(window.lucide) lucide.createIcons();
   buildAura(sorted.length);
   syncAura();
 }
@@ -850,6 +852,40 @@ function flipRender(){
     })(c, bl);
   }
 }
+function pickIcon(a){
+  var t=((a.name||'')+' '+(a.desc||'')).toLowerCase();
+  var map=[
+    [['pizza','restaurac','knajp','jedzenie','obiad','kolacj','lunch','burger','sushi','kebab','bistro','tapas','food'],'utensils'],
+    [['kaw','cafe','espresso','coffee'],'coffee'],
+    [['bar','drink','piwo','wino','cocktail','pub'],'wine'],
+    [['rower','bike','cycl'],'bike'],
+    [['nurkow','dive','snorkel'],'waves'],
+    [['basen','pool','plaż','beach','pływ','swim','kajak'],'waves'],
+    [['spa','sauna','masaż','wellness','relaks'],'flower-2'],
+    [['kino','film','movie','cinema'],'clapperboard'],
+    [['koncert','muzyk','music','concert'],'music'],
+    [['muzeum','museum','galeri','wystaw','sztuk'],'landmark'],
+    [['bilard','snooker'],'circle-dot'],
+    [['plansz','games','gaming','escape room','escape'],'dices'],
+    [['zakup','shopping','sklep','mall','market'],'shopping-bag'],
+    [['hotel','nocleg','apartament','hostel'],'bed-double'],
+    [['samolot','flight','lotnisk','airport','wakacj','urlop','wyjazd','trip','travel','podróż'],'plane'],
+    [['pociąg','train','kolej'],'train-front'],
+    [['samoch','roadtrip','auto '],'car'],
+    [['gór','mountain','szczyt','wspinacz','climb'],'mountain'],
+    [['szlak','trek','hik','wycieczk','spacer','wędrów'],'footprints'],
+    [['park','las','forest','natur','drzew'],'trees'],
+    [['narty','ski','snowboard','snow'],'snowflake'],
+    [['zoo','zwierz','koz','rancho','koń','konie','horse','farm'],'paw-print'],
+    [['fotograf','zdjęci','photo','camera'],'camera'],
+    [['grill','ognisk','bbq'],'flame'],
+    [['książk','czytani','book','bibliotek'],'book-open'],
+    [['teatr','theat','spektakl'],'drama'],
+    [['fitness','siłown','gym','trening','bieganie','run'],'dumbbell']
+  ];
+  for(var i=0;i<map.length;i++){ for(var j=0;j<map[i][0].length;j++){ if(t.indexOf(map[i][0][j])>=0) return map[i][1]; } }
+  return 'sparkles';
+}
 function card(a){
   var kOn = a.k!=null, mOn = a.m!=null;
   var ratingRow = ratingStars(a);
@@ -873,7 +909,7 @@ function card(a){
   '<div class="card glass" id="card-'+a.id+'">'+
     '<div class="card-row">'+
       '<div class="c-left">'+
-        '<div class="plus-ic" onclick="toggleDesc(\''+a.id+'\')"><svg viewBox="0 0 24 24" fill="none"><line class="v-line" x1="12" y1="6" x2="12" y2="18"/><line x1="6" y1="12" x2="18" y2="12"/></svg></div>'+
+        '<div class="plus-ic" onclick="toggleDesc(\''+a.id+'\')"><i data-lucide="'+pickIcon(a)+'"></i></div>'+
         '<div class="c-name">'+esc(a.name)+'</div>'+
       '</div>'+
       '<div class="row-right">'+rightCell+'</div>'+
@@ -1632,6 +1668,9 @@ function addFromMap(){
   setupPullForward();
   initFirebase();
 })();
+
+/* ---- ensure Lucide icons render once the library is ready ---- */
+window.addEventListener('load', function(){ if(window.lucide) lucide.createIcons(); });
 
 /* ---- PWA: register service worker (offline + installable + auto-update) ---- */
 if('serviceWorker' in navigator){
