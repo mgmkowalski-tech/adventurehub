@@ -2,7 +2,7 @@
    Network-first: always tries to load the newest version when online,
    falls back to the cached copy when offline. This is what makes new
    versions you push to GitHub show up on both phones automatically. */
-const CACHE = 'advhub-v1';
+const CACHE = 'advhub-v79';
 const ASSETS = [
   './',
   'index.html',
