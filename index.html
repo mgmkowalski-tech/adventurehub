@@ -267,7 +267,7 @@
   .plus-ic svg{width:24px;height:24px;display:block;}
   .plus-ic .v-line{transition:opacity .2s ease, transform .2s ease;transform-origin:center;}
   .card.minus .plus-ic .v-line{opacity:0;transform:rotate(90deg);}
-  .c-name{font-size:13px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;}
+  .c-name{font-size:13px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
   .star-btn{display:flex;align-items:center;justify-content:center;cursor:pointer;height:76px;}
   .star{width:28px;height:28px;display:block;}
   .star path{fill:var(--star-off);transition:fill .15s;}
@@ -958,7 +958,7 @@ function card(a){
     '<div class="card-row">'+
       '<div class="c-left">'+
         '<div class="plus-ic" onclick="toggleDesc(\''+a.id+'\')"><i data-lucide="'+pickIcon(a)+'"></i></div>'+
-        '<div class="c-name">'+esc(a.name)+'</div>'+
+        '<div class="c-name" onclick="toggleDesc(\''+a.id+'\')">'+esc(a.name)+'</div>'+
       '</div>'+
       '<div class="row-right">'+rightCell+'</div>'+
     '</div>'+
@@ -1183,7 +1183,7 @@ function editActivity(idv){
   var a=find(idv); editId=idv; formIcon=a.icon||null;
   document.getElementById('fName').value=a.name;
   document.getElementById('fDesc').value = a.desc.replace(/<\/?b>/g,'');
-  var canDel = (!a.author) || a.author===state.user;   // only the author may delete
+  var canDel = (!a.author) || a.author===state.user || state.user==='michal';   // author, or Michał (admin) may delete
   document.getElementById('fDel').style.display = canDel ? 'block' : 'none';
   renderFormIcon();
   showFormFrom(document.getElementById('card-'+idv));
@@ -1268,7 +1268,7 @@ function saveForm(){
 function deleteFromForm(){
   if(!editId) return;
   var a=find(editId);
-  if(a && a.author && a.author!==state.user){ return; }   // only the author may delete
+  if(a && a.author && a.author!==state.user && state.user!=='michal'){ return; }   // author, or Michał (admin) may delete
   if(confirm('Usunąć tę aktywność?')){
     activities=activities.filter(function(x){return x.id!==editId;});
     save(); closeForm(); flipRender();
