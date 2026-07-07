@@ -743,7 +743,7 @@
     </div>
     <button class="save-opt" onclick="saveOptions()">Save</button>
     <button class="logout-opt" onclick="doLogout()">Wyloguj</button>
-    <div class="app-ver">Outsy · wersja 77</div>
+    <div class="app-ver">Outsy · wersja 78</div>
   </div>
 
   <!-- install-as-app prompt (shown when opened in a browser, not yet installed) -->
@@ -787,7 +787,12 @@ function seed(){
 }
 function id(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function load(){ try{ return JSON.parse(localStorage.getItem('advhub.v2')); }catch(e){ return null; } }
-function save(){ if(docRef){ docRef.set({activities: activities}).catch(function(){}); } }
+var dataLoaded=false;   // becomes true only after the cloud doc has actually been read
+function save(){
+  if(!docRef) return;
+  if(!dataLoaded) return;                 // never overwrite the cloud before we've loaded it
+  docRef.set({activities: activities}).catch(function(){});
+}
 function saveSettings(){ localStorage.setItem('advhub.set', JSON.stringify({theme:state.theme,user:state.user})); }
 function loadSettings(){ try{ return JSON.parse(localStorage.getItem('advhub.set')); }catch(e){ return null; } }
 
@@ -1552,8 +1557,15 @@ function onLoggedIn(){
   updateUserBadge();
   if(unsub) return;
   unsub=docRef.onSnapshot(function(snap){
-    if(!snap.exists){ docRef.set({activities: seed()}).catch(function(){}); return; }
+    var fromCache = snap.metadata && snap.metadata.fromCache;
+    if(!snap.exists){
+      // only seed a genuinely-missing space, confirmed by the server, and only once —
+      // never re-inject defaults over data we've already loaded
+      if(!fromCache && !dataLoaded){ docRef.set({activities: seed()}).catch(function(){}); dataLoaded=true; }
+      return;
+    }
     var incoming = snap.data().activities || [];
+    dataLoaded = true;                             // the cloud doc has been read → saving is safe now
     if(sig(incoming) === sig(activities)) return;  // our own change / no change
     notifyChanges(activities, incoming);           // local push (variant B)
     activities = incoming;
