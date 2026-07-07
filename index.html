@@ -406,10 +406,42 @@
     background:rgba(30,34,50,0);transition:background .32s ease;}
   .form-screen.active{display:flex;}
   .form-screen.in{background:rgba(30,34,50,.34);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);}
-  .form-card{margin:58px 18px 0;border-radius:30px;padding:22px;position:relative;
+  .form-card{margin:58px 18px 0;border-radius:30px;padding:74px 22px 22px;position:relative;
     will-change:transform,opacity;}
-  .form-stars{position:absolute;top:22px;right:22px;display:flex;gap:8px;}
-  .form-stars .star{width:27px;height:27px;}
+  .form-ico-btn{position:absolute;top:20px;right:20px;width:54px;height:54px;
+    border-radius:16px;border:1.5px solid rgba(var(--glow-rgb),.4);background:var(--field);
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    color:rgb(var(--glow-rgb));padding:0;}
+  .form-ico-btn:active{transform:scale(.94);}
+  .form-ico-btn svg{width:26px;height:26px;display:block;}
+  .form-ico-edit{position:absolute;bottom:-6px;right:-6px;width:20px;height:20px;border-radius:50%;
+    background:rgb(var(--glow-rgb));display:flex;align-items:center;justify-content:center;}
+  .form-ico-edit svg{width:11px;height:11px;stroke:#fff;fill:none;stroke-width:2.4;
+    stroke-linecap:round;stroke-linejoin:round;}
+  /* ---- icon library picker ---- */
+  .icopick{position:absolute;inset:0;z-index:60;display:none;flex-direction:column;
+    background:rgba(30,34,50,.42);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
+  .icopick.active{display:flex;}
+  .icopick-card{margin:auto 14px;width:calc(100% - 28px);max-width:440px;max-height:78vh;
+    display:flex;flex-direction:column;border-radius:24px;padding:16px;
+    background:var(--field);box-shadow:0 24px 60px rgba(20,24,40,.35);}
+  .icopick-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .icopick-head .tt{font-size:16px;font-weight:600;color:var(--ink);flex:1;}
+  .icopick-close{width:32px;height:32px;border:none;background:var(--btn);border-radius:10px;
+    cursor:pointer;color:var(--muted);font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;}
+  .ico-search{width:100%;font-family:inherit;font-size:15px;color:var(--ink);
+    padding:12px 14px;border-radius:14px;border:1px solid var(--field-line);
+    background:var(--glass);outline:none;margin-bottom:12px;}
+  .ico-search::placeholder{color:var(--faint);}
+  .ico-grid{overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));
+    gap:8px;padding:2px;-webkit-overflow-scrolling:touch;}
+  .ico-item{aspect-ratio:1;border-radius:13px;border:1.5px solid var(--field-line);
+    background:var(--glass);cursor:pointer;display:flex;align-items:center;justify-content:center;
+    color:var(--ink);padding:0;}
+  .ico-item:active{transform:scale(.9);}
+  .ico-item svg{width:22px;height:22px;display:block;}
+  .ico-item.sel{border-color:rgb(var(--glow-rgb));background:rgba(var(--glow-rgb),.14);color:rgb(var(--glow-rgb));}
+  .ico-more{grid-column:1/-1;text-align:center;color:var(--faint);font-size:12px;padding:10px 0 4px;}
   .f-label{font-size:13px;font-weight:500;color:var(--muted);margin:4px 0 10px;}
   .f-input{
     width:100%;font-family:inherit;font-size:20px;font-weight:600;color:var(--ink);
@@ -623,14 +655,14 @@
   <!-- ===================== ADD / EDIT FORM ===================== -->
   <section id="form" class="form-screen" onclick="formBackdrop(event)">
     <div class="form-card glass">
-      <div class="form-stars">
-        <svg class="star k" id="fStarK" viewBox="0 0 24 24"><path d="M12 2l2.95 5.98 6.6.96-4.77 4.65 1.13 6.57L12 17.02 6.09 20.16l1.13-6.57L2.45 8.94l6.6-.96z"/></svg>
-        <svg class="star m" id="fStarM" viewBox="0 0 24 24"><path d="M12 2l2.95 5.98 6.6.96-4.77 4.65 1.13 6.57L12 17.02 6.09 20.16l1.13-6.57L2.45 8.94l6.6-.96z"/></svg>
-      </div>
+      <button class="form-ico-btn" id="fIconBtn" type="button" onclick="openIconPicker()" title="Zmień ikonę">
+        <i id="fIcon" data-lucide="sparkles"></i>
+        <span class="form-ico-edit"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+      </button>
       <div class="f-label">Nazwa aktywności</div>
-      <input class="f-input" id="fName" type="text" placeholder="Nazwa" autocomplete="off">
+      <input class="f-input" id="fName" type="text" placeholder="Nazwa" autocomplete="off" oninput="if(!formIcon)renderFormIcon()">
       <div class="f-label">Opis lub link</div>
-      <textarea class="f-area" id="fDesc" placeholder="Opis..."></textarea>
+      <textarea class="f-area" id="fDesc" placeholder="Opis..." oninput="if(!formIcon)renderFormIcon()"></textarea>
       <div class="form-actions">
         <button class="btn-save-form" onclick="saveForm()">Save</button>
         <button class="btn-cancel" onclick="closeForm()">Anuluj</button>
@@ -638,6 +670,18 @@
       </div>
     </div>
   </section>
+
+  <!-- ===================== ICON LIBRARY PICKER ===================== -->
+  <div id="iconPicker" class="icopick" onclick="if(event.target.id==='iconPicker')closeIconPicker()">
+    <div class="icopick-card">
+      <div class="icopick-head">
+        <div class="tt">Wybierz ikonę</div>
+        <button class="icopick-close" type="button" onclick="closeIconPicker()">×</button>
+      </div>
+      <input class="ico-search" id="icoSearch" type="text" placeholder="Szukaj (po angielsku, np. heart, food, car)…" autocomplete="off" oninput="renderIconGrid(this.value)">
+      <div class="ico-grid" id="icoGrid"></div>
+    </div>
+  </div>
 
   <!-- options panel (global — overlays any screen) -->
   <div class="options glass" id="options">
@@ -853,6 +897,7 @@ function flipRender(){
   }
 }
 function pickIcon(a){
+  if(a && a.icon) return a.icon;                 // manual override wins
   var t=((a.name||'')+' '+(a.desc||'')).toLowerCase();
   var map=[
     [['pizza','restaurac','knajp','jedzenie','obiad','kolacj','lunch','burger','sushi','kebab','bistro','tapas','food'],'utensils'],
@@ -1111,34 +1156,88 @@ function hideForm(){
 }
 function formBackdrop(e){ if(e.target.id==='form') hideForm(); }
 
+/* formIcon: null = auto (follow keyword suggestion); string = manual override */
+var formIcon=null;
+function renderFormIcon(){
+  var el=document.getElementById('fIcon');
+  if(!el) return;
+  var name = formIcon || pickIcon({
+    name:document.getElementById('fName').value,
+    desc:document.getElementById('fDesc').value
+  });
+  el.outerHTML='<i id="fIcon" data-lucide="'+name+'"></i>';
+  if(window.lucide) lucide.createIcons();
+}
 function openForm(){
-  editId=null;
+  editId=null; formIcon=null;
   document.getElementById('fName').value='';
   document.getElementById('fDesc').value='';
-  document.getElementById('fStarK').classList.remove('on');
-  document.getElementById('fStarM').classList.remove('on');
   document.getElementById('fDel').style.display='none';
+  renderFormIcon();
   showFormFrom(document.querySelector('.add-card'));
 }
 function editActivity(idv){
-  var a=find(idv); editId=idv;
+  var a=find(idv); editId=idv; formIcon=a.icon||null;
   document.getElementById('fName').value=a.name;
   document.getElementById('fDesc').value = a.desc.replace(/<\/?b>/g,'');
-  document.getElementById('fStarK').classList.toggle('on', a.k!=null);
-  document.getElementById('fStarM').classList.toggle('on', a.m!=null);
   var canDel = (!a.author) || a.author===state.user;   // only the author may delete
   document.getElementById('fDel').style.display = canDel ? 'block' : 'none';
+  renderFormIcon();
   showFormFrom(document.getElementById('card-'+idv));
 }
 function cloneActivity(idv){
   var a=find(idv); if(!a) return;
-  editId=null;                                   // new activity, not editing
+  editId=null; formIcon=a.icon||null;            // new activity, not editing
   document.getElementById('fName').value=a.name;
   document.getElementById('fDesc').value=(a.desc||'').replace(/<\/?b>/g,'');
-  document.getElementById('fStarK').classList.remove('on');
-  document.getElementById('fStarM').classList.remove('on');
   document.getElementById('fDel').style.display='none';
+  renderFormIcon();
   showFormFrom(document.getElementById('card-'+idv));
+}
+/* ---- icon library picker ---- */
+var ALL_ICONS=null;
+function allIconNames(){
+  if(ALL_ICONS) return ALL_ICONS;
+  var out=[], seen={};
+  if(window.lucide){
+    Object.keys(lucide).forEach(function(k){
+      if(!/^[A-Z][A-Za-z0-9]*$/.test(k)) return;          // icon exports are PascalCase
+      if(k==='Icon') return;
+      var base=k.replace(/Icon$/,'');                       // drop alias suffix
+      var kebab=base.replace(/([a-z])([0-9])/g,'$1-$2')
+                    .replace(/([a-z0-9])([A-Z])/g,'$1-$2')
+                    .toLowerCase();
+      if(seen[kebab]) return; seen[kebab]=1; out.push(kebab);
+    });
+  }
+  out.sort();
+  ALL_ICONS=out; return out;
+}
+function renderIconGrid(q){
+  var grid=document.getElementById('icoGrid'); if(!grid) return;
+  q=(q||'').toLowerCase().trim();
+  var names=allIconNames();
+  var list=q ? names.filter(function(n){return n.indexOf(q)>=0;}) : names;
+  var cap=300, shown=list.slice(0,cap);
+  var cur=formIcon || pickIcon({name:document.getElementById('fName').value,desc:document.getElementById('fDesc').value});
+  grid.innerHTML=shown.map(function(n){
+    return '<button type="button" class="ico-item'+(n===cur?' sel':'')+'" title="'+n+'" onclick="chooseIcon(\''+n+'\')"><i data-lucide="'+n+'"></i></button>';
+  }).join('') + (list.length>cap ? '<div class="ico-more">Pokazano '+cap+' z '+list.length+' — zawęź wyszukiwaniem</div>' : '');
+  if(window.lucide) lucide.createIcons();
+  /* drop any icon name that didn't resolve to an SVG (keeps the grid clean) */
+  var items=grid.querySelectorAll('.ico-item');
+  for(var i=0;i<items.length;i++){ if(!items[i].querySelector('svg')) items[i].style.display='none'; }
+}
+function openIconPicker(){
+  document.getElementById('icoSearch').value='';
+  renderIconGrid('');
+  document.getElementById('iconPicker').classList.add('active');
+}
+function closeIconPicker(){ document.getElementById('iconPicker').classList.remove('active'); }
+function chooseIcon(name){
+  formIcon=name;
+  renderFormIcon();
+  closeIconPicker();
 }
 function closeForm(){ hideForm(); }
 function saveForm(){
@@ -1147,8 +1246,11 @@ function saveForm(){
   if(!name){ document.getElementById('fName').focus(); return; }
   if(editId){
     var a=find(editId); a.name=name; a.desc=desc||a.desc;
+    if(formIcon) a.icon=formIcon; else delete a.icon;   // null = back to auto
   }else{
-    activities.push({id:id(), name:name, desc:desc||'Brak opisu.', k:null, m:null, author:state.user, category:currentCat, comments:[]});
+    var na={id:id(), name:name, desc:desc||'Brak opisu.', k:null, m:null, author:state.user, category:currentCat, comments:[]};
+    if(formIcon) na.icon=formIcon;
+    activities.push(na);
   }
   save(); closeForm(); flipRender();
   if(discoverOn) toggleDiscover();   // came from the map -> show the list with the new activity
@@ -1638,13 +1740,12 @@ function runTextSearch(){
 }
 function addFromMap(){
   if(!selectedPlace) return;
-  editId=null;
+  editId=null; formIcon=null;
   document.getElementById('fName').value=selectedPlace.name;
   var link='<a href="'+selectedPlace.url+'" target="_blank" rel="noopener">📍 Otwórz w Google Maps</a>';
   document.getElementById('fDesc').value=(selectedPlace.descText? selectedPlace.descText+'\n\n':'')+link;
-  document.getElementById('fStarK').classList.remove('on');
-  document.getElementById('fStarM').classList.remove('on');
   document.getElementById('fDel').style.display='none';
+  renderFormIcon();
   showFormFrom(document.querySelector('.discover-btn'));
 }
 
