@@ -150,6 +150,10 @@
   .notif-opt.on{background:rgb(var(--glow-rgb));color:#fff;}
   .notif-hint{font-size:11px;color:var(--faint);margin-top:8px;line-height:1.4;}
   .app-ver{font-size:11px;color:var(--faint);margin-top:16px;text-align:center;}
+  .sync-toast{position:absolute;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));z-index:90;
+    display:none;padding:12px 14px;border-radius:14px;font-size:13px;font-weight:600;text-align:center;
+    background:#c0392b;color:#fff;box-shadow:0 10px 26px rgba(192,57,43,.35);cursor:pointer;}
+  .sync-toast.show{display:block;}
   /* install-as-app banner */
   .install-banner{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));
     z-index:80;display:none;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;
@@ -743,8 +747,11 @@
     </div>
     <button class="save-opt" onclick="saveOptions()">Save</button>
     <button class="logout-opt" onclick="doLogout()">Wyloguj</button>
-    <div class="app-ver">Outsy · wersja 78</div>
+    <div class="app-ver">Outsy · wersja 79</div>
   </div>
+
+  <!-- shows only if a write to the shared cloud DB fails -->
+  <div class="sync-toast" id="syncToast" onclick="hideSyncErr()"></div>
 
   <!-- install-as-app prompt (shown when opened in a browser, not yet installed) -->
   <div class="install-banner" id="installBanner">
@@ -788,10 +795,15 @@ function seed(){
 function id(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function load(){ try{ return JSON.parse(localStorage.getItem('advhub.v2')); }catch(e){ return null; } }
 var dataLoaded=false;   // becomes true only after the cloud doc has actually been read
+function showSyncErr(msg){ var t=document.getElementById('syncToast'); if(t){ t.textContent=msg||'⚠️ Nie udało się zapisać do wspólnej bazy'; t.classList.add('show'); } }
+function hideSyncErr(){ var t=document.getElementById('syncToast'); if(t) t.classList.remove('show'); }
 function save(){
   if(!docRef) return;
   if(!dataLoaded) return;                 // never overwrite the cloud before we've loaded it
-  docRef.set({activities: activities}).catch(function(){});
+  docRef.set({activities: activities}).then(function(){ hideSyncErr(); }).catch(function(e){
+    console.warn('Firestore save failed:', e && e.code, e && e.message);
+    showSyncErr('⚠️ Zapis do wspólnej bazy nie działa ('+((e&&e.code)||'błąd')+')');
+  });
 }
 function saveSettings(){ localStorage.setItem('advhub.set', JSON.stringify({theme:state.theme,user:state.user})); }
 function loadSettings(){ try{ return JSON.parse(localStorage.getItem('advhub.set')); }catch(e){ return null; } }
