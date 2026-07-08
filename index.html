@@ -110,8 +110,8 @@
   .weather-panel{flex:0 0 auto;max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.22,1,.36,1);
     margin:0 18px;}
   .weather-panel.open{max-height:400px;}
-  .weather-inner{margin:10px 0 2px;padding:14px;border-radius:18px;max-height:360px;overflow-y:auto;
-    background:var(--glass);border:1px solid var(--glass-line);}
+  .weather-inner{margin:10px 0 2px;padding:6px 2px;max-height:360px;overflow-y:auto;
+    background:none;border:none;}
   .wx-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;}
   .wx-loc{font-size:14px;font-weight:600;color:var(--ink);}
   .wx-now{font-size:13px;color:var(--muted);}
@@ -807,7 +807,7 @@
     </div>
     <button class="save-opt" onclick="saveOptions()">Save</button>
     <button class="logout-opt" onclick="doLogout()">Wyloguj</button>
-    <div class="app-ver">Outsy · wersja 83</div>
+    <div class="app-ver">Outsy · wersja 84</div>
   </div>
 
   <!-- shows only if a write to the shared cloud DB fails -->
