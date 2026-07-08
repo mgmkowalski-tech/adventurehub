@@ -807,7 +807,7 @@
     </div>
     <button class="save-opt" onclick="saveOptions()">Save</button>
     <button class="logout-opt" onclick="doLogout()">Wyloguj</button>
-    <div class="app-ver">Outsy · wersja 84</div>
+    <div class="app-ver">Outsy · wersja 85</div>
   </div>
 
   <!-- shows only if a write to the shared cloud DB fails -->
@@ -1669,22 +1669,10 @@ function renderWeather(d,label){
       '<div class="wx-bar-wrap"><div class="wx-bar" style="height:'+Math.max(4,pct)+'%"></div></div>'+
       '<div class="wx-hr">'+(hh<10?'0':'')+hh+'</div></div>';
   }
-  var days='';
-  if(d.daily && d.daily.time){
-    var dt=d.daily.time, dmax=d.daily.precipitation_probability_max||[], dsum=d.daily.precipitation_sum||[];
-    var wd=['nd','pn','wt','śr','cz','pt','so'];
-    for(var k=0;k<dt.length;k++){
-      var p=dmax[k]!=null?dmax[k]:0, mm=dsum[k]!=null?dsum[k]:0, dd=new Date(dt[k]);
-      days+='<div class="wx-day"><span class="d">'+wd[dd.getDay()]+'</span>'+
-        '<span class="track"><span class="fill" style="width:'+p+'%"></span></span>'+
-        '<span class="mm">'+(mm>0?(mm+' mm'):'—')+'</span></div>';
-    }
-  }
   el.innerHTML=
     '<div class="wx-head"><span class="wx-loc">'+label+'</span><span class="wx-now">'+curTemp+(curP?(' · '+curP):'')+'</span></div>'+
     '<div class="wx-sub">Szansa opadów — najbliższe godziny</div>'+
-    '<div class="wx-hours">'+hours+'</div>'+
-    (days?('<div class="wx-sub">Opady w tygodniu</div><div class="wx-days">'+days+'</div>'):'');
+    '<div class="wx-hours">'+hours+'</div>';
 }
 
 /* ===================== NOTIFICATIONS (variant B: local, no server) ===================== */
