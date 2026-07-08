@@ -101,6 +101,35 @@
   .wordmark{display:block;margin:0 auto;width:172px;height:66px;color:var(--ink);}
   .wordmark-sm{width:69px;height:26px;flex:0 0 auto;color:var(--ink);}
   .list-logo{display:flex;align-items:center;gap:10px;padding:16px 18px 2px;flex:0 0 auto;}
+  .weather-btn{margin-left:auto;width:38px;height:38px;border:none;background:none;cursor:pointer;padding:0;
+    display:flex;align-items:center;justify-content:center;color:rgb(var(--glow-rgb));border-radius:11px;}
+  .weather-btn svg{width:26px;height:26px;display:block;}
+  .weather-btn:active{transform:scale(.92);}
+  .weather-btn.on{background:rgba(var(--glow-rgb),.14);}
+  /* collapsible weather panel between the logo and the tabs */
+  .weather-panel{flex:0 0 auto;max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.22,1,.36,1);
+    margin:0 18px;}
+  .weather-panel.open{max-height:400px;}
+  .weather-inner{margin:10px 0 2px;padding:14px;border-radius:18px;max-height:360px;overflow-y:auto;
+    background:var(--glass);border:1px solid var(--glass-line);}
+  .wx-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;}
+  .wx-loc{font-size:14px;font-weight:600;color:var(--ink);}
+  .wx-now{font-size:13px;color:var(--muted);}
+  .wx-sub{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:2px 0 8px;}
+  .wx-hours{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;}
+  .wx-hour{flex:0 0 auto;width:38px;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .wx-bar-wrap{height:64px;width:10px;background:rgba(var(--glow-rgb),.12);border-radius:6px;
+    display:flex;align-items:flex-end;overflow:hidden;}
+  .wx-bar{width:100%;background:rgb(var(--glow-rgb));border-radius:6px;transition:height .3s;}
+  .wx-pct{font-size:10px;font-weight:600;color:var(--ink);}
+  .wx-hr{font-size:10px;color:var(--faint);}
+  .wx-days{display:flex;flex-direction:column;gap:4px;margin-top:12px;}
+  .wx-day{display:flex;align-items:center;gap:10px;font-size:12px;}
+  .wx-day .d{width:34px;color:var(--muted);font-weight:600;}
+  .wx-day .track{flex:1;height:8px;border-radius:5px;background:rgba(var(--glow-rgb),.12);overflow:hidden;}
+  .wx-day .fill{height:100%;background:rgb(var(--glow-rgb));border-radius:5px;}
+  .wx-day .mm{width:52px;text-align:right;color:var(--ink);font-weight:600;}
+  .wx-msg{font-size:12px;color:var(--faint);text-align:center;padding:8px 4px;line-height:1.5;}
   .sygnet-sm{width:34px;height:34px;flex:0 0 auto;}
   .list-logo-txt .ln{font-size:20px;font-weight:800;color:var(--ink);line-height:1;letter-spacing:-.5px;}
   .list-logo-txt .ls{font-size:10px;font-weight:500;color:var(--muted);letter-spacing:.4px;margin-top:1px;}
@@ -657,7 +686,11 @@
     <div class="list-logo">
       <svg class="sygnet-sm" viewBox="0 0 184 184" aria-hidden="true"><use href="#sygnetSym"/></svg>
       <svg class="wordmark-sm" viewBox="0 0 185 71" aria-label="Outsy adventure hub"><use href="#wordmarkSym"/></svg>
+      <button class="weather-btn" id="weatherBtn" onclick="toggleWeather()" aria-label="Pogoda">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.9A5 5 0 1 1 15 10a4 4 0 0 1 3.8 5.1"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="16" y1="19" x2="16" y2="21"/></svg>
+      </button>
     </div>
+    <div class="weather-panel" id="weatherPanel"><div class="weather-inner" id="weatherInner"></div></div>
     <div class="cat-seg view-seg" id="viewSeg" data-active="0">
       <div class="cat-thumb glass"></div>
       <button class="cat-opt active" data-view="current" onclick="switchView('current')">Aktualne</button>
@@ -774,7 +807,7 @@
     </div>
     <button class="save-opt" onclick="saveOptions()">Save</button>
     <button class="logout-opt" onclick="doLogout()">Wyloguj</button>
-    <div class="app-ver">Outsy · wersja 82</div>
+    <div class="app-ver">Outsy · wersja 83</div>
   </div>
 
   <!-- shows only if a write to the shared cloud DB fails -->
@@ -1587,6 +1620,71 @@ function sig(arr){   // stable signature (ignores object key order) to detect re
   return JSON.stringify((arr||[]).map(function(a){
     return [a.id,a.name,a.desc,a.k,a.m,a.category||'',a.archived?1:0,(a.comments||[]).map(function(c){return [c.who,c.text,c.ts||''];})];
   }));
+}
+
+/* ===================== WEATHER (precipitation focus, Open-Meteo, no key) ===================== */
+var wxLoaded=false;
+function toggleWeather(){
+  var p=document.getElementById('weatherPanel'), b=document.getElementById('weatherBtn');
+  var open=p.classList.toggle('open');
+  if(b) b.classList.toggle('on', open);
+  if(open && !wxLoaded){ wxLoaded=true; loadWeather(); }
+}
+function wxMsg(t){ var el=document.getElementById('weatherInner'); if(el) el.innerHTML='<div class="wx-msg">'+t+'</div>'; }
+function loadWeather(){
+  wxMsg('Ładowanie prognozy…');
+  var done=false;
+  function go(lat,lon,label){ if(done) return; done=true; fetchWeather(lat,lon,label); }
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      function(pos){ go(pos.coords.latitude,pos.coords.longitude,'Twoja lokalizacja'); },
+      function(){ go(52.2297,21.0122,'Warszawa (domyślnie)'); },
+      {timeout:8000, maximumAge:600000}
+    );
+    setTimeout(function(){ go(52.2297,21.0122,'Warszawa (domyślnie)'); }, 9000);
+  }else{ go(52.2297,21.0122,'Warszawa (domyślnie)'); }
+}
+function fetchWeather(lat,lon,label){
+  var url='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+
+    '&current=temperature_2m,precipitation'+
+    '&hourly=precipitation_probability,precipitation'+
+    '&daily=precipitation_probability_max,precipitation_sum'+
+    '&timezone=auto&forecast_days=7';
+  fetch(url).then(function(r){ return r.json(); }).then(function(d){ renderWeather(d,label); })
+    .catch(function(){ wxMsg('Nie udało się pobrać prognozy. Sprawdź internet i spróbuj ponownie.'); });
+}
+function renderWeather(d,label){
+  var el=document.getElementById('weatherInner'); if(!el) return;
+  if(!d || !d.hourly){ wxMsg('Brak danych prognozy.'); return; }
+  var cur=d.current||{};
+  var curTemp=(cur.temperature_2m!=null)?Math.round(cur.temperature_2m)+'°':'';
+  var curP=(cur.precipitation!=null)?(cur.precipitation>0?('pada '+cur.precipitation+' mm'):'bez opadów'):'';
+  var ht=d.hourly.time||[], hp=d.hourly.precipitation_probability||[];
+  var now=Date.now(), start=0;
+  for(var i=0;i<ht.length;i++){ if(new Date(ht[i]).getTime()>=now-3600000){ start=i; break; } }
+  var hours='';
+  for(var j=start;j<Math.min(start+12,ht.length);j++){
+    var pct=hp[j]!=null?hp[j]:0, hh=new Date(ht[j]).getHours();
+    hours+='<div class="wx-hour"><div class="wx-pct">'+pct+'%</div>'+
+      '<div class="wx-bar-wrap"><div class="wx-bar" style="height:'+Math.max(4,pct)+'%"></div></div>'+
+      '<div class="wx-hr">'+(hh<10?'0':'')+hh+'</div></div>';
+  }
+  var days='';
+  if(d.daily && d.daily.time){
+    var dt=d.daily.time, dmax=d.daily.precipitation_probability_max||[], dsum=d.daily.precipitation_sum||[];
+    var wd=['nd','pn','wt','śr','cz','pt','so'];
+    for(var k=0;k<dt.length;k++){
+      var p=dmax[k]!=null?dmax[k]:0, mm=dsum[k]!=null?dsum[k]:0, dd=new Date(dt[k]);
+      days+='<div class="wx-day"><span class="d">'+wd[dd.getDay()]+'</span>'+
+        '<span class="track"><span class="fill" style="width:'+p+'%"></span></span>'+
+        '<span class="mm">'+(mm>0?(mm+' mm'):'—')+'</span></div>';
+    }
+  }
+  el.innerHTML=
+    '<div class="wx-head"><span class="wx-loc">'+label+'</span><span class="wx-now">'+curTemp+(curP?(' · '+curP):'')+'</span></div>'+
+    '<div class="wx-sub">Szansa opadów — najbliższe godziny</div>'+
+    '<div class="wx-hours">'+hours+'</div>'+
+    (days?('<div class="wx-sub">Opady w tygodniu</div><div class="wx-days">'+days+'</div>'):'');
 }
 
 /* ===================== NOTIFICATIONS (variant B: local, no server) ===================== */
